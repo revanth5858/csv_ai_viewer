@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV AI Viewer - Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>CSV AI Viewer - Application Test</h1>
+        
+        <div class="test-section">
+            <h3>1. JavaScript Functions Test</h3>
+            <button class="test-button" onclick="testFunctions()">Test Core Functions</button>
+            <div id="functionTestResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. Chart Generation Test</h3>
+            <button class="test-button" onclick="testChartGeneration()">Test Chart Generation</button>
+            <div id="chartTestResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. Pie Chart Test</h3>
+            <button class="test-button" onclick="testPieChart()">Test Pie Chart</button>
+            <div id="pieChartTestResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>4. Data Processing Test</h3>
+            <button class="test-button" onclick="testDataProcessing()">Test Data Processing</button>
+            <div id="dataTestResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data for testing
+        const testData = [
+            { category: 'A', value: 30 },
+            { category: 'B', value: 25 },
+            { category: 'C', value: 45 },
+            { category: 'D', value: 20 }
+        ];
+
+        function testFunctions() {
+            const resultDiv = document.getElementById('functionTestResult');
+            try {
+                // Test if basic functions exist
+                const functions = [
+                    'createChart',
+                    'updateChart',
+                    'prepareChartData',
+                    'generateChartHtml',
+                    'switchTab',
+                    'exportChart',
+                    'fullscreenChart',
+                    'refreshChart'
+                ];
+                
+                let missingFunctions = [];
+                functions.forEach(funcName => {
+                    if (typeof window[funcName] !== 'function') {
+                        missingFunctions.push(funcName);
+                    }
+                });
+                
+                if (missingFunctions.length === 0) {
+                    resultDiv.innerHTML = '<strong>✅ SUCCESS:</strong> All core functions are defined.';
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `<strong>❌ ERROR:</strong> Missing functions: ${missingFunctions.join(', ')}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ ERROR:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        function testChartGeneration() {
+            const resultDiv = document.getElementById('chartTestResult');
+            try {
+                // Test chart generation with mock data
+                if (typeof generateChartHtml === 'function') {
+                    const chartHtml = generateChartHtml('bar', testData, 'category', 'value');
+                    if (chartHtml && chartHtml.includes('chart-container-inner')) {
+                        resultDiv.innerHTML = '<strong>✅ SUCCESS:</strong> Chart generation is working.';
+                        resultDiv.className = 'result success';
+                    } else {
+                        resultDiv.innerHTML = '<strong>❌ ERROR:</strong> Chart generation failed.';
+                        resultDiv.className = 'result error';
+                    }
+                } else {
+                    resultDiv.innerHTML = '<strong>❌ ERROR:</strong> generateChartHtml function not found.';
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ ERROR:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        function testPieChart() {
+            const resultDiv = document.getElementById('pieChartTestResult');
+            try {
+                // Test pie chart generation
+                if (typeof generateChartHtml === 'function') {
+                    const pieChartHtml = generateChartHtml('pie', testData, 'category', 'value');
+                    if (pieChartHtml && pieChartHtml.includes('svg') && pieChartHtml.includes('pie-legend')) {
+                        resultDiv.innerHTML = '<strong>✅ SUCCESS:</strong> Pie chart generation is working.';
+                        resultDiv.className = 'result success';
+                    } else {
+                        resultDiv.innerHTML = '<strong>❌ ERROR:</strong> Pie chart generation failed.';
+                        resultDiv.className = 'result error';
+                    }
+                } else {
+                    resultDiv.innerHTML = '<strong>❌ ERROR:</strong> generateChartHtml function not found.';
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ ERROR:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        function testDataProcessing() {
+            const resultDiv = document.getElementById('dataTestResult');
+            try {
+                // Test data processing
+                if (typeof prepareChartData === 'function') {
+                    const processedData = prepareChartData('pie', 'category', 'value');
+                    if (Array.isArray(processedData)) {
+                        resultDiv.innerHTML = '<strong>✅ SUCCESS:</strong> Data processing is working.';
+                        resultDiv.className = 'result success';
+                    } else {
+                        resultDiv.innerHTML = '<strong>❌ ERROR:</strong> Data processing failed.';
+                        resultDiv.className = 'result error';
+                    }
+                } else {
+                    resultDiv.innerHTML = '<strong>❌ ERROR:</strong> prepareChartData function not found.';
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ ERROR:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Load the main script
+        window.addEventListener('load', function() {
+            // Try to load the main script
+            const script = document.createElement('script');
+            script.src = 'script.js';
+            script.onload = function() {
+                console.log('Main script loaded successfully');
+            };
+            script.onerror = function() {
+                console.error('Failed to load main script');
+            };
+            document.head.appendChild(script);
+        });
+    </script>
+</body>
+</html> 

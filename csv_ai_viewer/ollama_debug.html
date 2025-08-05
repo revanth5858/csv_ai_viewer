@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .warning { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>Ollama Debug Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Server Health Check</h3>
+        <button class="btn btn-primary" onclick="testHealth()">Test Server Health</button>
+        <div id="healthResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Ollama Connection Test</h3>
+        <button class="btn btn-primary" onclick="testOllama()">Test Ollama Connection</button>
+        <div id="ollamaResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. AI Analysis Test</h3>
+        <p>Test the AI analysis with sample data:</p>
+        <button class="btn btn-success" onclick="testAIAnalysis()">Test AI Analysis</button>
+        <div id="aiResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Manual Ollama Commands</h3>
+        <p>Run these commands in your terminal to verify Ollama:</p>
+        <div class="result info">
+# Check if Ollama is running:
+ollama ps
+
+# List available models:
+ollama list
+
+# Test a model (replace 'llama3:8b' with your model name):
+ollama run llama3:8b "Say hello"
+
+# Check Ollama version:
+ollama --version
+        </div>
+    </div>
+
+    <script>
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.innerHTML = '<div class="info">Testing server health...</div>';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <strong>Server Health Check:</strong>
+                        Status: ${data.status}
+                        Message: ${data.message}
+                        Server Type: ${data.server_type}
+                        Response Code: ${response.status}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Server Health Error:</strong>
+                        ${error.message}
+                        Make sure the Flask server is running on http://localhost:5000
+                    </div>
+                `;
+            }
+        }
+        
+        async function testOllama() {
+            const resultDiv = document.getElementById('ollamaResult');
+            resultDiv.innerHTML = '<div class="info">Testing Ollama connection...</div>';
+            
+            try {
+                const response = await fetch('/api/test-ollama');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>Ollama Test Success:</strong>
+                            Message: ${data.message}
+                            Available Models: ${data.available_models}
+                            Tested Model: ${data.tested_model}
+                            Test Response: ${data.test_response}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>Ollama Test Failed:</strong>
+                            Message: ${data.message}
+                            Error Type: ${data.error_type || 'Unknown'}
+                            Models List: ${JSON.stringify(data.models_list, null, 2)}
+                            Suggestion: ${data.suggestion || 'Check Ollama installation'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Network Error:</strong>
+                        ${error.message}
+                        This might mean the server is not running or not accessible.
+                    </div>
+                `;
+            }
+        }
+        
+        async function testAIAnalysis() {
+            const resultDiv = document.getElementById('aiResult');
+            resultDiv.innerHTML = '<div class="info">Testing AI analysis...</div>';
+            
+            // Sample CSV data
+            const sampleCSV = `Name,Age,City,Salary
+John,25,New York,50000
+Jane,30,Los Angeles,60000
+Bob,35,Chicago,55000
+Alice,28,Boston,52000`;
+            
+            try {
+                const response = await fetch('/api/ai-analysis', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        csvData: sampleCSV,
+                        question: 'What is the average age?'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>AI Analysis Success:</strong>
+                            Question: "What is the average age?"
+                            Response: ${JSON.stringify(data.response, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>AI Analysis Failed:</strong>
+                            Error: ${data.error}
+                            Status Code: ${response.status}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>Network Error:</strong>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-run health check on page load
+        window.onload = function() {
+            testHealth();
+        };
+    </script>
+</body>
+</html> 

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chart-area {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 10px 0;
+            min-height: 300px;
+            background: #fafafa;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5a6fd8;
+        }
+        select {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .test-data {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chart Functionality Test</h1>
+    
+    <div class="test-container">
+        <h2>Test Data</h2>
+        <div class="test-data">
+            <strong>Sample CSV Data:</strong><br>
+            Name,Age,City,Salary<br>
+            John,25,NYC,50000<br>
+            Jane,30,LA,60000<br>
+            Bob,35,Chicago,55000<br>
+            Alice,28,NYC,52000<br>
+            Charlie,32,LA,58000<br>
+            Diana,27,Chicago,48000<br>
+            Eve,29,NYC,54000<br>
+            Frank,31,LA,62000
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Chart Controls</h2>
+        <label>Chart Type:</label>
+        <select id="chartType">
+            <option value="bar">Bar Chart</option>
+            <option value="line">Line Chart</option>
+            <option value="pie">Pie Chart</option>
+            <option value="scatter">Scatter Plot</option>
+            <option value="area">Area Chart</option>
+            <option value="histogram">Histogram</option>
+            <option value="heatmap">Heatmap</option>
+            <option value="boxplot">Box Plot</option>
+            <option value="funnel">Funnel Chart</option>
+            <option value="radar">Radar Chart</option>
+        </select>
+        
+        <label>X-Axis:</label>
+        <select id="xAxis">
+            <option value="">Select Column</option>
+        </select>
+        
+        <label>Y-Axis:</label>
+        <select id="yAxis">
+            <option value="">Select Column</option>
+        </select>
+        
+        <button onclick="testCreateChart()">Create Chart</button>
+        <button onclick="loadTestData()">Load Test Data</button>
+        <button onclick="clearChart()">Clear Chart</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>Chart Output</h2>
+        <div id="chartArea" class="chart-area">
+            <p>Select chart type and axes, then click "Create Chart"</p>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Console Logs</h2>
+        <div id="consoleLog" style="background: #000; color: #0f0; padding: 10px; height: 200px; overflow-y: scroll; font-family: monospace; font-size: 12px;"></div>
+    </div>
+
+    <script>
+        // Test data
+        let testData = [];
+        
+        // Mock functions from the main application
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                data.push(row);
+            }
+            
+            return data;
+        }
+        
+        function loadTestData() {
+            const csvData = `Name,Age,City,Salary
+John,25,NYC,50000
+Jane,30,LA,60000
+Bob,35,Chicago,55000
+Alice,28,NYC,52000
+Charlie,32,LA,58000
+Diana,27,Chicago,48000
+Eve,29,NYC,54000
+Frank,31,LA,62000`;
+            
+            testData = parseCSV(csvData);
+            log('Test data loaded:', testData.length, 'rows');
+            
+            // Populate chart options
+            populateChartOptions();
+        }
+        
+        function populateChartOptions() {
+            if (testData.length === 0) {
+                log('No data available for chart options');
+                return;
+            }
+            
+            const headers = Object.keys(testData[0]);
+            log('Headers found:', headers);
+            
+            const xAxisSelect = document.getElementById('xAxis');
+            const yAxisSelect = document.getElementById('yAxis');
+            
+            // Clear existing options
+            xAxisSelect.innerHTML = '<option value="">Select Column</option>';
+            yAxisSelect.innerHTML = '<option value="">Select Column</option>';
+            
+            // Add options
+            headers.forEach(header => {
+                const xOption = document.createElement('option');
+                xOption.value = header;
+                xOption.textContent = header;
+                xAxisSelect.appendChild(xOption);
+                
+                const yOption = document.createElement('option');
+                yOption.value = header;
+                yOption.textContent = header;
+                yAxisSelect.appendChild(yOption);
+            });
+            
+            log('Chart options populated');
+        }
+        
+        function prepareChartData(chartType, xAxis, yAxis) {
+            log('=== prepareChartData called ===');
+            log('Parameters:', { chartType, xAxis, yAxis });
+            log('Test data length:', testData.length);
+            
+            if (testData.length === 0) {
+                log('No data available for chart preparation');
+                return [];
+            }
+            
+            try {
+                log('Processing chart type:', chartType);
+                
+                if (chartType === 'bar' || chartType === 'pie') {
+                    log('Processing bar/pie chart data...');
+                    const counts = {};
+                    testData.forEach(row => {
+                        const value = row[xAxis] || 'Unknown';
+                        counts[value] = (counts[value] || 0) + 1;
+                    });
+                    
+                    const result = Object.entries(counts).map(([key, value]) => ({
+                        x: key,
+                        y: value,
+                        value: value,
+                        label: key
+                    }));
+                    
+                    log('Bar/pie data prepared:', result);
+                    return result;
+                    
+                } else if (chartType === 'line' || chartType === 'scatter' || chartType === 'area') {
+                    log('Processing line/scatter/area chart data...');
+                    const numericData = testData
+                        .map((row, index) => ({
+                            x: row[xAxis] || index,
+                            y: parseFloat(row[yAxis]) || 0,
+                            value: parseFloat(row[yAxis]) || 0
+                        }))
+                        .filter(item => !isNaN(item.y));
+                    
+                    log('Line/scatter/area data prepared:', numericData);
+                    return numericData;
+                    
+                } else if (chartType === 'histogram') {
+                    log('Processing histogram data...');
+                    const values = testData
+                        .map(row => parseFloat(row[yAxis]))
+                        .filter(val => !isNaN(val));
+                    
+                    if (values.length === 0) {
+                        log('No numeric values found for histogram');
+                        return [];
+                    }
+                    
+                    const min = Math.min(...values);
+                    const max = Math.max(...values);
+                    const binCount = Math.min(10, Math.ceil(Math.sqrt(values.length)));
+                    const binSize = (max - min) / binCount;
+                    
+                    const bins = {};
+                    for (let i = 0; i < binCount; i++) {
+                        const binStart = min + i * binSize;
+                        const binEnd = min + (i + 1) * binSize;
+                        const binLabel = `${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
+                        bins[binLabel] = 0;
+                    }
+                    
+                    values.forEach(value => {
+                        const binIndex = Math.floor((value - min) / binSize);
+                        const binStart = min + binIndex * binSize;
+                        const binEnd = min + (binIndex + 1) * binSize;
+                        const binLabel = `${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
+                        bins[binLabel]++;
+                    });
+                    
+                    const result = Object.entries(bins).map(([key, value]) => ({
+                        x: key,
+                        y: value,
+                        value: value
+                    }));
+                    
+                    log('Histogram data prepared:', result);
+                    return result;
+                }
+                
+                log('Unknown chart type:', chartType);
+                return [];
+                
+            } catch (error) {
+                log('Error preparing chart data:', error);
+                return [];
+            }
+        }
+        
+        function generateChartHtml(chartType, data, xAxis, yAxis) {
+            log('generateChartHtml called with:', { chartType, dataLength: data.length, xAxis, yAxis });
+            
+            if (data.length === 0) {
+                return '<div class="chart-placeholder"><p>No data available for this chart</p></div>';
+            }
+            
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#fa709a', '#fee140'];
+            
+            if (chartType === 'bar') {
+                const maxValue = Math.max(...data.map(d => d.y));
+                if (maxValue === 0) return '<div class="chart-placeholder"><p>No data to display</p></div>';
+                
+                return `
+                    <div class="chart-container-inner">
+                        <div class="chart-bars" style="display: flex; align-items: end; height: 300px; gap: 10px;">
+                            ${data.map((d, i) => `
+                                <div class="chart-bar-item" style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                                    <div class="chart-bar" style="width: 40px; height: ${(d.y / maxValue) * 250}px; background: ${colors[i % colors.length]}; border-radius: 4px 4px 0 0;"></div>
+                                    <div class="chart-label" style="font-size: 12px; margin-top: 5px; text-align: center;">${d.x}</div>
+                                    <div class="chart-value" style="font-size: 12px; font-weight: bold; margin-top: 2px;">${d.y}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (chartType === 'line') {
+                const maxY = Math.max(...data.map(d => d.y));
+                if (maxY === 0) return '<div class="chart-placeholder"><p>No data to display</p></div>';
+                
+                const points = data.map((d, i) => {
+                    const x = (i / (data.length - 1)) * 700 + 50;
+                    const y = 400 - (d.y / maxY) * 300;
+                    return `${x},${y}`;
+                }).join(' ');
+                
+                return `
+                    <div class="chart-container-inner">
+                        <svg width="100%" height="400" viewBox="0 0 800 400">
+                            <polyline fill="none" stroke="#667eea" stroke-width="3" points="${points}"/>
+                            ${data.map((d, i) => {
+                                const x = (i / (data.length - 1)) * 700 + 50;
+                                const y = 400 - (d.y / maxY) * 300;
+                                return `<circle cx="${x}" cy="${y}" r="4" fill="#667eea"/>`;
+                            }).join('')}
+                        </svg>
+                    </div>
+                `;
+            } else if (chartType === 'pie') {
+                const total = data.reduce((sum, d) => sum + d.value, 0);
+                if (total === 0) return '<div class="chart-placeholder"><p>No data to display</p></div>';
+                
+                let currentAngle = 0;
+                const centerX = 200;
+                const centerY = 200;
+                const radius = 150;
+                
+                return `
+                    <div class="chart-container-inner">
+                        <svg width="400" height="400" viewBox="0 0 400 400">
+                            ${data.map((d, i) => {
+                                const angle = (d.value / total) * 360;
+                                const startAngle = currentAngle;
+                                const endAngle = currentAngle + angle;
+                                
+                                const x1 = centerX + radius * Math.cos(startAngle * Math.PI / 180);
+                                const y1 = centerY + radius * Math.sin(startAngle * Math.PI / 180);
+                                const x2 = centerX + radius * Math.cos(endAngle * Math.PI / 180);
+                                const y2 = centerY + radius * Math.sin(endAngle * Math.PI / 180);
+                                
+                                const largeArcFlag = angle > 180 ? 1 : 0;
+                                const path = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+                                
+                                currentAngle += angle;
+                                
+                                return `<path d="${path}" fill="${colors[i % colors.length]}" stroke="white" stroke-width="2"/>`;
+                            }).join('')}
+                        </svg>
+                        <div class="pie-legend" style="margin-top: 20px;">
+                            ${data.map((d, i) => `
+                                <div class="legend-item" style="display: flex; align-items: center; margin: 5px 0;">
+                                    <span class="legend-color" style="width: 20px; height: 20px; background: ${colors[i % colors.length]}; margin-right: 10px; border-radius: 2px;"></span>
+                                    <span>${d.label || d.x}: ${d.value} (${((d.value / total) * 100).toFixed(1)}%)</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return '<div class="chart-placeholder"><p>Chart type not implemented in test</p></div>';
+        }
+        
+        function testCreateChart() {
+            log('=== createChart called ===');
+            
+            const chartType = document.getElementById('chartType').value;
+            const xAxis = document.getElementById('xAxis').value;
+            const yAxis = document.getElementById('yAxis').value;
+            
+            log('Chart parameters:', { chartType, xAxis, yAxis });
+            log('Test data length:', testData.length);
+            
+            if (!chartType || !xAxis || !yAxis) {
+                log('Missing chart parameters:', { chartType, xAxis, yAxis });
+                alert('Please select chart type, X-axis, and Y-axis.');
+                return;
+            }
+            
+            if (testData.length === 0) {
+                log('No data available for chart creation');
+                alert('No data available for chart creation.');
+                return;
+            }
+            
+            try {
+                log('Preparing chart data...');
+                const chartData = prepareChartData(chartType, xAxis, yAxis);
+                log('Chart data prepared:', chartData);
+                log('Chart data length:', chartData.length);
+                
+                if (chartData.length === 0) {
+                    log('No data available for the selected chart configuration');
+                    alert('No data available for the selected chart configuration.');
+                    return;
+                }
+                
+                log('Generating chart HTML...');
+                const chartHtml = generateChartHtml(chartType, chartData, xAxis, yAxis);
+                log('Chart HTML generated, length:', chartHtml.length);
+                
+                const chartArea = document.getElementById('chartArea');
+                if (chartArea) {
+                    log('Chart area found, rendering chart...');
+                    chartArea.innerHTML = chartHtml;
+                    log('Chart rendered successfully');
+                } else {
+                    log('Chart area not found');
+                    alert('Chart area not found.');
+                }
+                
+            } catch (error) {
+                log('Error creating chart:', error);
+                log('Error stack:', error.stack);
+                alert(`Error creating chart: ${error.message}`);
+            }
+        }
+        
+        function clearChart() {
+            document.getElementById('chartArea').innerHTML = '<p>Select chart type and axes, then click "Create Chart"</p>';
+            log('Chart cleared');
+        }
+        
+        function log(...args) {
+            const consoleLog = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const message = `[${timestamp}] ${args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ')}`;
+            
+            consoleLog.innerHTML += message + '<br>';
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            
+            // Also log to browser console
+            console.log(...args);
+        }
+        
+        // Initialize
+        log('Chart test page loaded');
+    </script>
+</body>
+</html> 

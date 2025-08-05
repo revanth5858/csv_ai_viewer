@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pie Chart Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chart-area {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 10px 0;
+            min-height: 400px;
+            background: #fafafa;
+        }
+        .pie-legend {
+            margin-top: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5a6fd8;
+        }
+        .console-log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            height: 200px;
+            overflow-y: scroll;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pie Chart Test</h1>
+    
+    <div class="test-container">
+        <h2>Test Controls</h2>
+        <button onclick="testPieChart()">Test Pie Chart</button>
+        <button onclick="testWithSampleData()">Test with Sample Data</button>
+        <button onclick="clearChart()">Clear Chart</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>Chart Output</h2>
+        <div id="chartArea" class="chart-area">
+            <p>Click "Test Pie Chart" to generate a pie chart</p>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Console Logs</h2>
+        <div id="consoleLog" class="console-log"></div>
+    </div>
+
+    <script>
+        function log(...args) {
+            const consoleLog = document.getElementById('consoleLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const message = `[${timestamp}] ${args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ')}`;
+            
+            consoleLog.innerHTML += message + '<br>';
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            
+            // Also log to browser console
+            console.log(...args);
+        }
+        
+        function generatePieChart(data) {
+            log('=== generatePieChart called ===');
+            log('Data:', data);
+            
+            if (data.length === 0) {
+                log('No data provided');
+                return '<div class="chart-placeholder"><p>No data available for this chart</p></div>';
+            }
+            
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#fa709a', '#fee140'];
+            const total = data.reduce((sum, d) => sum + d.value, 0);
+            
+            log('Total value:', total);
+            
+            if (total === 0) {
+                log('Total is zero, cannot create pie chart');
+                return '<div class="chart-placeholder"><p>No data to display</p></div>';
+            }
+            
+            let currentAngle = 0;
+            const centerX = 200;
+            const centerY = 200;
+            const radius = 150;
+            
+            log('Creating SVG paths...');
+            
+            const svgPaths = data.map((d, i) => {
+                const angle = (d.value / total) * 360;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + angle;
+                
+                log(`Slice ${i}: value=${d.value}, angle=${angle.toFixed(2)}°, start=${startAngle.toFixed(2)}°, end=${endAngle.toFixed(2)}°`);
+                
+                const x1 = centerX + radius * Math.cos(startAngle * Math.PI / 180);
+                const y1 = centerY + radius * Math.sin(startAngle * Math.PI / 180);
+                const x2 = centerX + radius * Math.cos(endAngle * Math.PI / 180);
+                const y2 = centerY + radius * Math.sin(endAngle * Math.PI / 180);
+                
+                const largeArcFlag = angle > 180 ? 1 : 0;
+                const path = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+                
+                currentAngle += angle;
+                
+                return `<path d="${path}" fill="${colors[i % colors.length]}" stroke="white" stroke-width="2"/>`;
+            }).join('');
+            
+            log('SVG paths created');
+            
+            const legendItems = data.map((d, i) => `
+                <div class="legend-item">
+                    <span class="legend-color" style="background: ${colors[i % colors.length]}"></span>
+                    <span>${d.label || d.x}: ${d.value} (${((d.value / total) * 100).toFixed(1)}%)</span>
+                </div>
+            `).join('');
+            
+            log('Legend items created');
+            
+            const chartHtml = `
+                <div class="chart-container-inner">
+                    <svg width="400" height="400" viewBox="0 0 400 400">
+                        ${svgPaths}
+                    </svg>
+                    <div class="pie-legend">
+                        ${legendItems}
+                    </div>
+                </div>
+            `;
+            
+            log('Chart HTML generated');
+            return chartHtml;
+        }
+        
+        function testPieChart() {
+            log('=== testPieChart called ===');
+            
+            // Test data
+            const testData = [
+                { x: 'Category A', y: 30, value: 30, label: 'Category A' },
+                { x: 'Category B', y: 25, value: 25, label: 'Category B' },
+                { x: 'Category C', y: 20, value: 20, label: 'Category C' },
+                { x: 'Category D', y: 15, value: 15, label: 'Category D' },
+                { x: 'Category E', y: 10, value: 10, label: 'Category E' }
+            ];
+            
+            log('Test data:', testData);
+            
+            try {
+                const chartHtml = generatePieChart(testData);
+                log('Chart HTML generated successfully');
+                
+                const chartArea = document.getElementById('chartArea');
+                if (chartArea) {
+                    chartArea.innerHTML = chartHtml;
+                    log('Chart rendered successfully');
+                } else {
+                    log('Chart area not found');
+                }
+            } catch (error) {
+                log('Error generating pie chart:', error);
+                log('Error stack:', error.stack);
+            }
+        }
+        
+        function testWithSampleData() {
+            log('=== testWithSampleData called ===');
+            
+            // Sample data that might be similar to what the main app uses
+            const sampleData = [
+                { x: 'NYC', y: 3, value: 3, label: 'NYC' },
+                { x: 'LA', y: 3, value: 3, label: 'LA' },
+                { x: 'Chicago', y: 2, value: 2, label: 'Chicago' }
+            ];
+            
+            log('Sample data:', sampleData);
+            
+            try {
+                const chartHtml = generatePieChart(sampleData);
+                log('Chart HTML generated successfully');
+                
+                const chartArea = document.getElementById('chartArea');
+                if (chartArea) {
+                    chartArea.innerHTML = chartHtml;
+                    log('Chart rendered successfully');
+                } else {
+                    log('Chart area not found');
+                }
+            } catch (error) {
+                log('Error generating pie chart:', error);
+                log('Error stack:', error.stack);
+            }
+        }
+        
+        function clearChart() {
+            document.getElementById('chartArea').innerHTML = '<p>Click "Test Pie Chart" to generate a pie chart</p>';
+            log('Chart cleared');
+        }
+        
+        // Initialize
+        log('Pie chart test page loaded');
+    </script>
+</body>
+</html> 

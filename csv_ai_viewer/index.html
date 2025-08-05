@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV AI Viewer - Excel-like Data Table</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="main-title">
+                        <i class="fas fa-table"></i>
+                        CSV AI Viewer
+                    </h1>
+                    <p class="subtitle">Excel-like Data Table with AI Analysis</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-outline-light btn-sm mr-2" id="darkModeBtn" onclick="toggleDarkMode()">
+                        <i class="fas fa-moon"></i> Dark Mode
+                    </button>
+                    <button class="btn btn-outline-light btn-sm mr-2" onclick="showKeyboardShortcuts()">
+                        <i class="fas fa-keyboard"></i> Shortcuts
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" onclick="showHelp()">
+                        <i class="fas fa-question-circle"></i> Help
+                    </button>
+                    <button class="btn btn-danger" onclick="stopApplication()" title="Stop Application">
+                        <i class="fas fa-power-off"></i> Stop App
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- File Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-card">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>Upload Your CSV File</h3>
+                    <p>Drag and drop your CSV file here or click to browse</p>
+                    <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open"></i>
+                        Choose File
+                    </button>
+                    <div class="file-info" id="fileInfo" style="display: none;">
+                        <p><strong>File:</strong> <span id="fileName"></span></p>
+                        <p><strong>Size:</strong> <span id="fileSize"></span></p>
+                        <p><strong>Rows:</strong> <span id="rowCount"></span></p>
+                        <p><strong>Columns:</strong> <span id="columnCount"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table Section -->
+            <div class="table-section" id="tableSection" style="display: none;">
+                <!-- Tab Navigation -->
+                <div class="tab-navigation">
+                    <button class="tab-btn active" onclick="switchTab('table')">
+                        <i class="fas fa-table"></i> Data Table
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('dashboard')">
+                        <i class="fas fa-chart-line"></i> PowerBI Dashboard
+                    </button>
+                </div>
+
+                <!-- Table Tab Content -->
+                <div class="tab-content" id="tableTab">
+                    <!-- Table Controls -->
+                    <div class="table-controls">
+                        <!-- Primary Controls Row -->
+                        <div class="control-row primary-controls">
+                            <div class="control-group">
+                                <label for="sortColumn">Sort by:</label>
+                                <select id="sortColumn" onchange="updateSorting()">
+                                    <option value="">None</option>
+                                </select>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="sortAscending" checked onchange="updateSorting()">
+                                    Ascending
+                                </label>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="rowsPerPage">Rows per page:</label>
+                                <select id="rowsPerPage" onchange="updatePagination()">
+                                    <option value="25">25</option>
+                                    <option value="50" selected>50</option>
+                                    <option value="100">100</option>
+                                    <option value="200">200</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="globalFilter">Global filter:</label>
+                                <input type="text" id="globalFilter" placeholder="Search across all columns..." onkeyup="applyFilters()">
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons Row -->
+                        <div class="control-row action-buttons">
+                            <div class="control-group">
+                                <button class="btn btn-primary" onclick="exportData('csv')">
+                                    <i class="fas fa-save"></i> Save CSV
+                                </button>
+                                <button class="btn btn-primary" onclick="showImportExportMenu()">
+                                    <i class="fas fa-exchange-alt"></i> Import/Export
+                                </button>
+                                <button class="btn btn-secondary" onclick="addRow()">
+                                    <i class="fas fa-plus"></i> Add Row
+                                </button>
+                                <button class="btn btn-secondary" onclick="addColumn()">
+                                    <i class="fas fa-plus"></i> Add Column
+                                </button>
+                            </div>
+                            
+                            <div class="control-group">
+                                <button class="btn btn-secondary" onclick="undoEdit()">
+                                    <i class="fas fa-undo"></i> Undo
+                                </button>
+                                <button class="btn btn-secondary" onclick="redoEdit()">
+                                    <i class="fas fa-redo"></i> Redo
+                                </button>
+                                <button class="btn btn-secondary" onclick="toggleFreezeHeader()">
+                                    <i class="fas fa-thumbtack"></i> Freeze Header
+                                </button>
+                                <button class="btn btn-secondary" onclick="showFindReplace()">
+                                    <i class="fas fa-search"></i> Find/Replace
+                                </button>
+                            </div>
+                            
+                            <div class="control-group">
+                                <button class="btn btn-secondary" onclick="showConditionalFormatting()">
+                                    <i class="fas fa-palette"></i> Format
+                                </button>
+                                <button class="btn btn-secondary" onclick="showQuickStats()">
+                                    <i class="fas fa-calculator"></i> Quick Stats
+                                </button>
+                                <button class="btn btn-secondary" onclick="showDataValidation()">
+                                    <i class="fas fa-check-circle"></i> Data Validation
+                                </button>
+                                <button class="btn btn-secondary" onclick="showFormulaHelp()">
+                                    <i class="fas fa-question-circle"></i> Formula Help
+                                </button>
+                            </div>
+                            
+                            <div class="control-group">
+                                <button class="btn btn-warning" onclick="clearFilters()">
+                                    <i class="fas fa-filter"></i> Clear Filters
+                                </button>
+                                <button class="btn btn-danger" onclick="resetData()">
+                                    <i class="fas fa-undo"></i> Reset Data
+                                </button>
+                                <button class="btn btn-danger" onclick="clearData()" title="Clear all data and cache">
+                                    <i class="fas fa-trash"></i> Clear All & Cache
+                                </button>
+                            </div>
+                        </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Filters Display -->
+                    <div class="active-filters" id="activeFilters" style="display: none;">
+                        <h4>Active Filters:</h4>
+                        <div id="filterTags"></div>
+                    </div>
+
+                    <!-- Data Table -->
+                    <div class="table-container">
+                        <table class="excel-table" id="dataTable">
+                            <thead id="tableHeader">
+                                <!-- Headers will be populated by JavaScript -->
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination" id="pagination">
+                        <button class="btn btn-secondary" id="prevBtn" onclick="previousPage()" disabled>
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                        <button class="btn btn-secondary" id="nextBtn" onclick="nextPage()" disabled>
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Table Info -->
+                    <div class="table-info">
+                        <p>Showing <span id="showingRows">0</span> of <span id="totalRows">0</span> rows</p>
+                    </div>
+                </div>
+
+                <!-- Dashboard Tab Content -->
+                <div class="tab-content" id="dashboardTab" style="display: none;">
+                    <!-- Dashboard Controls -->
+                    <div class="dashboard-controls">
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label for="chartType">Chart Type:</label>
+                                <select id="chartType" onchange="updateChart()">
+                                    <option value="bar">Bar Chart</option>
+                                    <option value="line">Line Chart</option>
+                                    <option value="pie">Pie Chart</option>
+                                    <option value="scatter">Scatter Plot</option>
+                                    <option value="area">Area Chart</option>
+                                    <option value="histogram">Histogram</option>
+                                    <option value="heatmap">Heatmap</option>
+                                    <option value="boxplot">Box Plot</option>
+                                    <option value="funnel">Funnel Chart</option>
+                                    <option value="radar">Radar Chart</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="xAxis">X-Axis:</label>
+                                <select id="xAxis" onchange="updateChart()">
+                                    <option value="">Select Column</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="yAxis">Y-Axis:</label>
+                                <select id="yAxis" onchange="updateChart()">
+                                    <option value="">Select Column</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="colorBy">Color By:</label>
+                                <select id="colorBy" onchange="updateChart()">
+                                    <option value="">None</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-group">
+                                <button class="btn btn-primary" onclick="createChart()">
+                                    <i class="fas fa-chart-bar"></i> Create Chart
+                                </button>
+                                <button class="btn btn-secondary" onclick="exportChart()">
+                                    <i class="fas fa-download"></i> Export Chart
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label for="aggregationType">Aggregation:</label>
+                                <select id="aggregationType" onchange="updateChart()">
+                                    <option value="sum">Sum</option>
+                                    <option value="average">Average</option>
+                                    <option value="count">Count</option>
+                                    <option value="min">Minimum</option>
+                                    <option value="max">Maximum</option>
+                                    <option value="median">Median</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="timeGrouping">Time Grouping:</label>
+                                <select id="timeGrouping" onchange="updateChart()">
+                                    <option value="">None</option>
+                                    <option value="year">Year</option>
+                                    <option value="quarter">Quarter</option>
+                                    <option value="month">Month</option>
+                                    <option value="week">Week</option>
+                                    <option value="day">Day</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label for="topN">Top N:</label>
+                                <input type="number" id="topN" value="10" min="1" max="50" onchange="updateChart()">
+                            </div>
+                            
+                            <div class="control-group">
+                                <button class="btn btn-warning" onclick="showAdvancedFilters()">
+                                    <i class="fas fa-filter"></i> Advanced Filters
+                                </button>
+                                <button class="btn btn-info" onclick="showCalculatedFields()">
+                                    <i class="fas fa-calculator"></i> Calculated Fields
+                                </button>
+                                <button class="btn btn-secondary" onclick="refreshChartOptions()">
+                                    <i class="fas fa-sync-alt"></i> Refresh Options
+                                </button>
+                                <button class="btn btn-warning" onclick="initializeDashboard()">
+                                    <i class="fas fa-bug"></i> Debug Dashboard
+                                </button>
+                                <button class="btn btn-danger" onclick="debugPieChart()">
+                                    <i class="fas fa-chart-pie"></i> Debug Pie Chart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Grid -->
+                    <div class="dashboard-grid">
+                        <!-- Key Metrics -->
+                        <div class="metric-cards">
+                            <div class="metric-card" id="totalRecords">
+                                <div class="metric-icon">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value" id="totalRecordsValue">0</div>
+                                    <div class="metric-label">Total Records</div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card" id="numericColumns">
+                                <div class="metric-icon">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value" id="numericColumnsValue">0</div>
+                                    <div class="metric-label">Numeric Columns</div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card" id="categoricalColumns">
+                                <div class="metric-icon">
+                                    <i class="fas fa-tags"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value" id="categoricalColumnsValue">0</div>
+                                    <div class="metric-label">Categorical Columns</div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card" id="missingData">
+                                <div class="metric-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value" id="missingDataValue">0</div>
+                                    <div class="metric-label">Missing Values</div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card" id="dataQuality">
+                                <div class="metric-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value" id="dataQualityValue">0%</div>
+                                    <div class="metric-label">Data Quality</div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-card" id="uniqueValues">
+                                <div class="metric-icon">
+                                    <i class="fas fa-unique"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value" id="uniqueValuesValue">0</div>
+                                    <div class="metric-label">Unique Values</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Multi-Chart Layout -->
+                        <div class="charts-layout">
+                            <!-- Main Chart Container -->
+                            <div class="chart-container main-chart">
+                                <div class="chart-header">
+                                    <h3 id="chartTitle">Data Visualization</h3>
+                                    <div class="chart-controls">
+                                        <button class="btn btn-sm btn-secondary" onclick="fullscreenChart()">
+                                            <i class="fas fa-expand"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" onclick="refreshChart()">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-info" onclick="drillDown()">
+                                            <i class="fas fa-search-plus"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" onclick="showChartSettings()">
+                                            <i class="fas fa-cog"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="chart-area" id="chartArea">
+                                    <div class="chart-placeholder">
+                                        <i class="fas fa-chart-line"></i>
+                                        <p>Select chart type and axes to create a visualization</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Secondary Charts -->
+                            <div class="secondary-charts">
+                                <div class="chart-container mini-chart">
+                                    <div class="chart-header">
+                                        <h4>Trend Analysis</h4>
+                                        <button class="btn btn-sm btn-secondary" onclick="createMiniChart('trend')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <div class="chart-area" id="trendChart">
+                                        <div class="chart-placeholder">
+                                            <i class="fas fa-chart-line"></i>
+                                            <p>Trend chart</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-container mini-chart">
+                                    <div class="chart-header">
+                                        <h4>Distribution</h4>
+                                        <button class="btn btn-sm btn-secondary" onclick="createMiniChart('distribution')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <div class="chart-area" id="distributionChart">
+                                        <div class="chart-placeholder">
+                                            <i class="fas fa-chart-pie"></i>
+                                            <p>Distribution chart</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-container mini-chart">
+                                    <div class="chart-header">
+                                        <h4>Correlation</h4>
+                                        <button class="btn btn-sm btn-secondary" onclick="createMiniChart('correlation')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <div class="chart-area" id="correlationChart">
+                                        <div class="chart-placeholder">
+                                            <i class="fas fa-chart-scatter"></i>
+                                            <p>Correlation chart</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Analytics -->
+                        <div class="analytics-section">
+                            <div class="analytics-panel">
+                                <h3><i class="fas fa-chart-line"></i> Advanced Analytics</h3>
+                                <div class="analytics-content">
+                                    <div class="analytics-item">
+                                        <h4>Statistical Summary</h4>
+                                        <div id="statisticalSummary" class="stats-grid">
+                                            <!-- Statistical summary will be populated -->
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="analytics-item">
+                                        <h4>Outlier Detection</h4>
+                                        <div id="outlierDetection" class="outliers-list">
+                                            <!-- Outliers will be populated -->
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="analytics-item">
+                                        <h4>Correlation Matrix</h4>
+                                        <div id="correlationMatrix" class="correlation-grid">
+                                            <!-- Correlation matrix will be populated -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Insights -->
+                        <div class="insights-panel">
+                            <h3><i class="fas fa-lightbulb"></i> Data Insights</h3>
+                            <div class="insights-content" id="insightsContent">
+                                <div class="insight-item">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Upload data to see insights</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Charts -->
+                        <div class="quick-charts">
+                            <h3><i class="fas fa-bolt"></i> Quick Charts</h3>
+                            <div class="quick-charts-grid" id="quickChartsGrid">
+                                <!-- Quick charts will be generated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Hint -->
+            <div class="ai-section-hint" style="text-align:center; margin: 24px 0 0 0;">
+                <span style="color:#764ba2; font-weight:500; font-size:1.1em;">
+                    <i class="fas fa-robot"></i> Need data insights? Use the floating AI Assistant button at the bottom right!
+                </span>
+            </div>
+        </main>
+
+        <!-- Modals -->
+        <div class="modal" id="addColumnModal">
+            <div class="modal-content">
+                <h3>Add New Column</h3>
+                <input type="text" id="newColumnName" placeholder="Column name">
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="confirmAddColumn()">Add</button>
+                    <button class="btn btn-secondary" onclick="closeModal('addColumnModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Filters Modal -->
+        <div class="modal" id="advancedFiltersModal">
+            <div class="modal-content large-modal">
+                <h3><i class="fas fa-filter"></i> Advanced Filters</h3>
+                <div class="filter-sections">
+                    <div class="filter-section">
+                        <h4>Column Filters</h4>
+                        <div id="columnFilters" class="filter-list">
+                            <!-- Column filters will be populated -->
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h4>Date Range</h4>
+                        <div class="date-range">
+                            <input type="date" id="startDate" onchange="applyDateFilter()">
+                            <span>to</span>
+                            <input type="date" id="endDate" onchange="applyDateFilter()">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h4>Numeric Range</h4>
+                        <div class="numeric-range">
+                            <input type="number" id="minValue" placeholder="Min" onchange="applyNumericFilter()">
+                            <span>to</span>
+                            <input type="number" id="maxValue" placeholder="Max" onchange="applyNumericFilter()">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h4>Custom Expression</h4>
+                        <textarea id="customFilter" placeholder="Enter custom filter expression..." rows="3"></textarea>
+                        <button class="btn btn-primary" onclick="applyCustomFilter()">Apply Expression</button>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="applyAdvancedFilters()">Apply Filters</button>
+                    <button class="btn btn-warning" onclick="clearAdvancedFilters()">Clear All</button>
+                    <button class="btn btn-secondary" onclick="closeModal('advancedFiltersModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculated Fields Modal -->
+        <div class="modal" id="calculatedFieldsModal">
+            <div class="modal-content large-modal">
+                <h3><i class="fas fa-calculator"></i> Calculated Fields</h3>
+                <div class="calculated-fields-section">
+                    <div class="field-builder">
+                        <h4>Create New Field</h4>
+                        <div class="field-inputs">
+                            <input type="text" id="calculatedFieldName" placeholder="Field Name">
+                            <select id="calculationType">
+                                <option value="formula">Formula</option>
+                                <option value="aggregation">Aggregation</option>
+                                <option value="date">Date Calculation</option>
+                                <option value="text">Text Function</option>
+                            </select>
+                        </div>
+                        <textarea id="calculatedFieldFormula" placeholder="Enter formula or expression..." rows="4"></textarea>
+                        <div class="formula-help">
+                            <h5>Available Functions:</h5>
+                            <div class="function-list">
+                                <span class="function-tag" onclick="insertFunction('SUM')">SUM()</span>
+                                <span class="function-tag" onclick="insertFunction('AVERAGE')">AVERAGE()</span>
+                                <span class="function-tag" onclick="insertFunction('COUNT')">COUNT()</span>
+                                <span class="function-tag" onclick="insertFunction('MAX')">MAX()</span>
+                                <span class="function-tag" onclick="insertFunction('MIN')">MIN()</span>
+                                <span class="function-tag" onclick="insertFunction('IF')">IF()</span>
+                                <span class="function-tag" onclick="insertFunction('CONCATENATE')">CONCATENATE()</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="createCalculatedField()">Create Field</button>
+                    </div>
+                    
+                    <div class="existing-fields">
+                        <h4>Existing Calculated Fields</h4>
+                        <div id="calculatedFieldsList" class="fields-list">
+                            <!-- Calculated fields will be listed here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeModal('calculatedFieldsModal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Find/Replace Modal -->
+        <div class="modal" id="findReplaceModal">
+            <div class="modal-content">
+                <h3><i class="fas fa-search"></i> Find and Replace</h3>
+                <div class="find-replace-section">
+                    <div class="find-section">
+                        <label>Find:</label>
+                        <input type="text" id="findText" placeholder="Enter text to find">
+                    </div>
+                    <div class="replace-section">
+                        <label>Replace with:</label>
+                        <input type="text" id="replaceText" placeholder="Enter replacement text">
+                    </div>
+                    <div class="options-section">
+                        <label><input type="checkbox" id="matchCase"> Match case</label>
+                        <label><input type="checkbox" id="wholeWord"> Whole word only</label>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="findText()">Find</button>
+                    <button class="btn btn-warning" onclick="replaceText()">Replace</button>
+                    <button class="btn btn-danger" onclick="replaceAll()">Replace All</button>
+                    <button class="btn btn-secondary" onclick="closeModal('findReplaceModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conditional Formatting Modal -->
+        <div class="modal" id="conditionalFormattingModal">
+            <div class="modal-content large-modal">
+                <h3><i class="fas fa-palette"></i> Conditional Formatting</h3>
+                <div class="formatting-section">
+                    <div class="format-rule">
+                        <h4>Add Formatting Rule</h4>
+                        <div class="rule-inputs">
+                            <select id="formatColumn">
+                                <option value="">Select Column</option>
+                            </select>
+                            <select id="formatCondition">
+                                <option value="equals">Equals</option>
+                                <option value="contains">Contains</option>
+                                <option value="greater">Greater than</option>
+                                <option value="less">Less than</option>
+                                <option value="between">Between</option>
+                            </select>
+                            <input type="text" id="formatValue" placeholder="Value">
+                            <input type="color" id="formatColor" value="#ffeb3b">
+                        </div>
+                        <button class="btn btn-primary" onclick="addConditionalFormat()">Add Rule</button>
+                    </div>
+                    
+                    <div class="existing-rules">
+                        <h4>Active Formatting Rules</h4>
+                        <div id="formattingRulesList" class="rules-list">
+                            <!-- Formatting rules will be listed here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-warning" onclick="clearConditionalFormatting()">Clear All</button>
+                    <button class="btn btn-secondary" onclick="closeModal('conditionalFormattingModal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats Modal -->
+        <div class="modal" id="quickStatsModal">
+            <div class="modal-content large-modal">
+                <h3><i class="fas fa-calculator"></i> Quick Statistics</h3>
+                <div class="stats-section">
+                    <div class="stats-overview">
+                        <div class="stat-card">
+                            <h4>Total Rows</h4>
+                            <span id="totalRowsStat">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Total Columns</h4>
+                            <span id="totalColumnsStat">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Numeric Columns</h4>
+                            <span id="numericColumnsStat">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Text Columns</h4>
+                            <span id="textColumnsStat">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="column-stats">
+                        <h4>Column Statistics</h4>
+                        <div id="columnStatsList" class="stats-list">
+                            <!-- Column statistics will be listed here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeModal('quickStatsModal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Validation Modal -->
+        <div class="modal" id="dataValidationModal">
+            <div class="modal-content large-modal">
+                <h3><i class="fas fa-check-circle"></i> Data Validation</h3>
+                <div class="validation-section">
+                    <div class="validation-rule">
+                        <h4>Add Validation Rule</h4>
+                        <div class="rule-inputs">
+                            <select id="validationColumn">
+                                <option value="">Select Column</option>
+                            </select>
+                            <select id="validationType">
+                                <option value="required">Required</option>
+                                <option value="numeric">Numeric only</option>
+                                <option value="email">Email format</option>
+                                <option value="date">Date format</option>
+                                <option value="range">Value range</option>
+                                <option value="list">List of values</option>
+                            </select>
+                            <input type="text" id="validationValue" placeholder="Validation criteria">
+                        </div>
+                        <button class="btn btn-primary" onclick="addDataValidation()">Add Rule</button>
+                    </div>
+                    
+                    <div class="existing-validation">
+                        <h4>Active Validation Rules</h4>
+                        <div id="validationRulesList" class="rules-list">
+                            <!-- Validation rules will be listed here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-warning" onclick="clearDataValidation()">Clear All</button>
+                    <button class="btn btn-secondary" onclick="closeModal('dataValidationModal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formula Help Modal -->
+        <div class="modal" id="formulaHelpModal">
+            <div class="modal-content large-modal">
+                <h3><i class="fas fa-question-circle"></i> Formula Help</h3>
+                <div class="formula-help-section">
+                    <div class="formula-categories">
+                        <div class="category">
+                            <h4>Mathematical Functions</h4>
+                            <ul>
+                                <li><strong>SUM(range)</strong> - Sum of values in range</li>
+                                <li><strong>AVERAGE(range)</strong> - Average of values in range</li>
+                                <li><strong>COUNT(range)</strong> - Count of non-empty cells</li>
+                                <li><strong>MAX(range)</strong> - Maximum value in range</li>
+                                <li><strong>MIN(range)</strong> - Minimum value in range</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="category">
+                            <h4>Text Functions</h4>
+                            <ul>
+                                <li><strong>CONCATENATE(text1, text2)</strong> - Combine text</li>
+                                <li><strong>UPPER(text)</strong> - Convert to uppercase</li>
+                                <li><strong>LOWER(text)</strong> - Convert to lowercase</li>
+                                <li><strong>LEN(text)</strong> - Length of text</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="category">
+                            <h4>Logical Functions</h4>
+                            <ul>
+                                <li><strong>IF(condition, true_value, false_value)</strong> - Conditional logic</li>
+                                <li><strong>AND(condition1, condition2)</strong> - Logical AND</li>
+                                <li><strong>OR(condition1, condition2)</strong> - Logical OR</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="category">
+                            <h4>Cell References</h4>
+                            <ul>
+                                <li><strong>A1</strong> - Reference specific cell</li>
+                                <li><strong>A1:A10</strong> - Reference range of cells</li>
+                                <li><strong>$A$1</strong> - Absolute reference</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-examples">
+                        <h4>Examples</h4>
+                        <div class="example">
+                            <strong>Sum of column A:</strong> =SUM(A1:A10)
+                        </div>
+                        <div class="example">
+                            <strong>Average of column B:</strong> =AVERAGE(B1:B10)
+                        </div>
+                        <div class="example">
+                            <strong>Conditional formatting:</strong> =IF(A1>100, "High", "Low")
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeModal('formulaHelpModal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Settings Modal -->
+        <div class="modal" id="chartSettingsModal">
+            <div class="modal-content">
+                <h3><i class="fas fa-cog"></i> Chart Settings</h3>
+                <div class="settings-sections">
+                    <div class="setting-group">
+                        <h4>Appearance</h4>
+                        <div class="setting-item">
+                            <label for="chartTitle">Chart Title:</label>
+                            <input type="text" id="chartTitleInput" onchange="updateChartTitle()">
+                        </div>
+                        <div class="setting-item">
+                            <label for="chartTheme">Theme:</label>
+                            <select id="chartTheme" onchange="updateChartTheme()">
+                                <option value="default">Default</option>
+                                <option value="dark">Dark</option>
+                                <option value="light">Light</option>
+                                <option value="colorful">Colorful</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="chartColors">Color Palette:</label>
+                            <select id="chartColors" onchange="updateChartColors()">
+                                <option value="default">Default</option>
+                                <option value="rainbow">Rainbow</option>
+                                <option value="pastel">Pastel</option>
+                                <option value="monochrome">Monochrome</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h4>Axes</h4>
+                        <div class="setting-item">
+                            <label for="showGrid">Show Grid:</label>
+                            <input type="checkbox" id="showGrid" checked onchange="updateChartGrid()">
+                        </div>
+                        <div class="setting-item">
+                            <label for="showLabels">Show Labels:</label>
+                            <input type="checkbox" id="showLabels" checked onchange="updateChartLabels()">
+                        </div>
+                        <div class="setting-item">
+                            <label for="rotateLabels">Rotate Labels:</label>
+                            <input type="checkbox" id="rotateLabels" onchange="updateChartLabelRotation()">
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h4>Interactivity</h4>
+                        <div class="setting-item">
+                            <label for="enableTooltips">Enable Tooltips:</label>
+                            <input type="checkbox" id="enableTooltips" checked onchange="updateChartTooltips()">
+                        </div>
+                        <div class="setting-item">
+                            <label for="enableAnimations">Enable Animations:</label>
+                            <input type="checkbox" id="enableAnimations" checked onchange="updateChartAnimations()">
+                        </div>
+                        <div class="setting-item">
+                            <label for="enableDrilldown">Enable Drill-down:</label>
+                            <input type="checkbox" id="enableDrilldown" onchange="updateChartDrilldown()">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="applyChartSettings()">Apply Settings</button>
+                    <button class="btn btn-secondary" onclick="closeModal('chartSettingsModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drill-down Modal -->
+        <div class="modal" id="drillDownModal">
+            <div class="modal-content">
+                <h3><i class="fas fa-search-plus"></i> Drill-down Analysis</h3>
+                <div class="drill-down-content">
+                    <div class="drill-level">
+                        <h4>Current Level: <span id="currentDrillLevel">Main</span></h4>
+                        <div class="drill-path" id="drillPath">
+                            <!-- Drill path will be shown here -->
+                        </div>
+                    </div>
+                    
+                    <div class="drill-options">
+                        <h4>Drill-down Options</h4>
+                        <div id="drillOptions" class="drill-options-list">
+                            <!-- Drill options will be populated -->
+                        </div>
+                    </div>
+                    
+                    <div class="drill-chart">
+                        <h4>Detailed View</h4>
+                        <div id="drillChartArea" class="drill-chart-area">
+                            <!-- Drill-down chart will be shown here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="drillUp()">Drill Up</button>
+                    <button class="btn btn-primary" onclick="exportDrillData()">Export Data</button>
+                    <button class="btn btn-secondary" onclick="closeModal('drillDownModal')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Chat Modal -->
+        <div class="modal" id="aiChatModal">
+            <div class="modal-content ai-chat-modal">
+                <div class="ai-chat-header">
+                    <h3><i class="fas fa-robot"></i> AI Assistant</h3>
+                    <div class="ai-mode-selector">
+                        <button class="mode-btn active" id="queryModeBtn" onclick="switchAIMode('query')">
+                            <i class="fas fa-comments"></i> Query
+                        </button>
+                        <button class="mode-btn" id="filterModeBtn" onclick="switchAIMode('filter')">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                    <button class="close-btn" onclick="closeModal('aiChatModal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="ai-chat-body">
+                    <div class="ai-chat-messages" id="aiChatMessages">
+                        <div class="ai-message">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="ai-message-content">
+                                <p>Hello! I'm your AI assistant. I can help you analyze your CSV data, create visualizations, answer questions about your data, and provide insights. What would you like to know?</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ai-chat-input">
+                        <div class="input-group">
+                            <input type="text" id="aiQueryInput" placeholder="Ask me anything about your data..." onkeypress="handleAIQueryKeyPress(event)">
+                            <button class="btn btn-ai" onclick="sendAIQuery()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div class="ai-suggestions" id="querySuggestions">
+                            <button class="suggestion-btn" onclick="sendSuggestion('Show me a summary of the data')">📊 Data Summary</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Show data quality report')">📋 Data Quality</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Find outliers in the data')">🔍 Find Outliers</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Analyze correlations between columns')">📉 Correlations</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Show me the top 10 values')">🏆 Top Values</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Find patterns in the data')">🔍 Patterns</button>
+                        </div>
+                        <div class="ai-suggestions" id="filterSuggestions" style="display: none;">
+                            <button class="suggestion-btn" onclick="sendSuggestion('Show rows where age is greater than 30')">👥 Age > 30</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Filter rows with salary above 50000')">💰 Salary > 50k</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Show only completed orders')">✅ Completed Orders</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Filter by date range last 30 days')">📅 Last 30 Days</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Show rows where status is active')">🟢 Active Status</button>
+                            <button class="suggestion-btn" onclick="sendSuggestion('Filter by category electronics')">📱 Electronics</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating AI Assistant Button -->
+    <div class="floating-ai-btn">
+        <button class="btn btn-ai btn-lg" onclick="openAIChat()" aria-label="Open AI Assistant">
+            <i class="fas fa-robot"></i>
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
