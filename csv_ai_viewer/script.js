@@ -401,9 +401,19 @@ function populateTable() {
     
     // Create header row
     const headerRow = document.createElement('tr');
-    headers.forEach(header => {
+    headers.forEach((header, index) => {
         const th = document.createElement('th');
-        th.className = 'sortable';
+        th.className = 'sortable draggable';
+        th.draggable = true;
+        th.dataset.columnIndex = index;
+        th.dataset.columnName = header;
+        
+        // Add drag event handlers
+        th.addEventListener('dragstart', handleHeaderDragStart);
+        th.addEventListener('dragover', handleHeaderDragOver);
+        th.addEventListener('drop', handleHeaderDrop);
+        th.addEventListener('dragenter', handleHeaderDragEnter);
+        th.addEventListener('dragleave', handleHeaderDragLeave);
         
         // Create header content container
         const headerContent = document.createElement('div');
@@ -415,44 +425,17 @@ function populateTable() {
         headerText.className = 'header-text';
         headerContent.appendChild(headerText);
         
-        // Header actions container
-        const headerActions = document.createElement('div');
-        headerActions.className = 'header-actions';
-        
-        // Sort button
-        const sortBtn = document.createElement('button');
-        sortBtn.className = 'header-btn sort-btn';
-        sortBtn.innerHTML = '<i class="fas fa-sort"></i>';
-        sortBtn.title = 'Sort column';
-        sortBtn.onclick = (e) => {
+        // Single header action button
+        const headerActionBtn = document.createElement('button');
+        headerActionBtn.className = 'header-action-btn';
+        headerActionBtn.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
+        headerActionBtn.title = 'Column options (Sort, Filter, Menu)';
+        headerActionBtn.onclick = (e) => {
             e.stopPropagation();
-            sortByColumn(header);
+            showHeaderActionMenu(header, e);
         };
-        headerActions.appendChild(sortBtn);
         
-        // Filter button
-        const filterBtn = document.createElement('button');
-        filterBtn.className = 'header-btn filter-btn';
-        filterBtn.innerHTML = '<i class="fas fa-filter"></i>';
-        filterBtn.title = 'Filter column';
-        filterBtn.onclick = (e) => {
-            e.stopPropagation();
-            showColumnFilter(header);
-        };
-        headerActions.appendChild(filterBtn);
-        
-        // Column menu button
-        const menuBtn = document.createElement('button');
-        menuBtn.className = 'header-btn menu-btn';
-        menuBtn.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
-        menuBtn.title = 'Column options';
-        menuBtn.onclick = (e) => {
-            e.stopPropagation();
-            showColumnMenu(header, e);
-        };
-        headerActions.appendChild(menuBtn);
-        
-        headerContent.appendChild(headerActions);
+        headerContent.appendChild(headerActionBtn);
         th.appendChild(headerContent);
         
         // Add click handler for sorting
@@ -3679,20 +3662,38 @@ function toggleFreezeHeader() {
     }
 }
 
-// Add mouse move handler for column resizing
+// Enhanced mouse move handler for column resizing with visual guide
 document.addEventListener('mousemove', (e) => {
     if (isResizing && currentResizeColumn !== null) {
-        const headers = document.querySelectorAll('#tableHeaders th');
+        const headers = document.querySelectorAll('#tableHeader th');
         const header = headers[currentResizeColumn];
+        const resizer = header.querySelector('.column-resizer');
         const rect = header.getBoundingClientRect();
         const newWidth = e.clientX - rect.left;
-        if (newWidth > 50) { // Minimum width
-            header.style.width = newWidth + 'px';
+        
+        // Update resize guide position
+        if (resizer && resizer.resizeGuide) {
+            resizer.resizeGuide.style.left = e.clientX + 'px';
+        }
+        
+        // Apply width constraints - allow any size but with reasonable limits
+        const minWidth = 20; // Much smaller minimum
+        const maxWidth = 800; // Larger maximum
+        const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+        
+        if (constrainedWidth >= minWidth) {
+            header.style.width = constrainedWidth + 'px';
+            header.style.minWidth = constrainedWidth + 'px';
+            
             // Update all cells in this column
             const cells = document.querySelectorAll(`td:nth-child(${currentResizeColumn + 1})`);
             cells.forEach(cell => {
-                cell.style.width = newWidth + 'px';
+                cell.style.width = constrainedWidth + 'px';
+                cell.style.minWidth = constrainedWidth + 'px';
             });
+            
+            // Show width indicator
+            showWidthIndicator(constrainedWidth);
         }
     }
 });
@@ -3702,6 +3703,23 @@ document.addEventListener('mouseup', () => {
         isResizing = false;
         currentResizeColumn = null;
         document.body.style.cursor = 'default';
+        
+        // Remove resize guide
+        const guides = document.querySelectorAll('.resize-guide');
+        guides.forEach(guide => guide.remove());
+        
+        // Remove border from header
+        const headers = document.querySelectorAll('#tableHeader th');
+        headers.forEach(header => {
+            header.style.borderRight = '';
+            const resizer = header.querySelector('.column-resizer');
+            if (resizer) {
+                resizer.style.backgroundColor = 'transparent';
+            }
+        });
+        
+        // Hide width indicator
+        hideWidthIndicator();
     }
     if (isDragging) {
         isDragging = false;
@@ -5706,5 +5724,454 @@ function applyFilterToData(filterCode) {
         console.error('Error in applyFilterToData:', error);
         alert('AI filter did not return an array of objects. Please rephrase your filter or try again.');
         return [];
+    }
+}
+
+// Column drag and drop functionality
+function handleHeaderDragStart(e) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.outerHTML);
+    e.dataTransfer.setData('text/plain', e.target.dataset.columnIndex);
+    e.target.classList.add('dragging');
+}
+
+function handleHeaderDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleHeaderDragEnter(e) {
+    e.preventDefault();
+    e.target.classList.add('drag-over');
+}
+
+function handleHeaderDragLeave(e) {
+    e.target.classList.remove('drag-over');
+}
+
+function handleHeaderDrop(e) {
+    e.preventDefault();
+    e.target.classList.remove('drag-over');
+    
+    const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+    const dropTarget = e.target.closest('th');
+    const dropIndex = parseInt(dropTarget.dataset.columnIndex);
+    
+    if (draggedIndex !== dropIndex) {
+        reorderColumn(draggedIndex, dropIndex);
+    }
+    
+    // Remove dragging class from all headers
+    document.querySelectorAll('th').forEach(th => {
+        th.classList.remove('dragging');
+    });
+}
+
+// Column width management functions
+function expandAllColumns() {
+    const headers = document.querySelectorAll('#tableHeader th');
+    const table = document.getElementById('dataTable');
+    const tableWidth = table.offsetWidth;
+    const columnWidth = Math.max(80, tableWidth / headers.length);
+    
+    headers.forEach((header, index) => {
+        header.style.width = columnWidth + 'px';
+        const cells = document.querySelectorAll(`td:nth-child(${index + 1})`);
+        cells.forEach(cell => {
+            cell.style.width = columnWidth + 'px';
+            cell.style.minWidth = columnWidth + 'px';
+        });
+    });
+    
+    // Add visual feedback
+    showNotification('All columns expanded to equal width', 'success');
+}
+
+function reduceAllColumns() {
+    const headers = document.querySelectorAll('#tableHeader th');
+    const minWidth = 30;
+    
+    headers.forEach((header, index) => {
+        header.style.width = minWidth + 'px';
+        const cells = document.querySelectorAll(`td:nth-child(${index + 1})`);
+        cells.forEach(cell => {
+            cell.style.width = minWidth + 'px';
+            cell.style.minWidth = minWidth + 'px';
+        });
+    });
+    
+    showNotification('All columns reduced to minimum width', 'success');
+}
+
+function autoFitColumns() {
+    const headers = document.querySelectorAll('#tableHeader th');
+    const table = document.getElementById('dataTable');
+    const tableWidth = table.offsetWidth;
+    
+    headers.forEach((header, index) => {
+        // Calculate optimal width based on content
+        const columnData = Array.from(document.querySelectorAll(`td:nth-child(${index + 1})`));
+        const headerText = header.textContent || header.innerText;
+        
+        // Get maximum content width
+        let maxWidth = headerText.length * 8; // Approximate character width
+        
+        columnData.forEach(cell => {
+            const cellText = cell.textContent || cell.innerText;
+            const cellWidth = cellText.length * 8;
+            maxWidth = Math.max(maxWidth, cellWidth);
+        });
+        
+        // Add padding and ensure minimum/maximum bounds
+        const optimalWidth = Math.max(80, Math.min(300, maxWidth + 20));
+        
+        header.style.width = optimalWidth + 'px';
+        const cells = document.querySelectorAll(`td:nth-child(${index + 1})`);
+        cells.forEach(cell => {
+            cell.style.width = optimalWidth + 'px';
+            cell.style.minWidth = optimalWidth + 'px';
+        });
+    });
+    
+    showNotification('Columns auto-fitted to content', 'success');
+}
+
+function resetColumnWidths() {
+    const headers = document.querySelectorAll('#tableHeader th');
+    
+    headers.forEach((header, index) => {
+        header.style.width = '';
+        header.style.minWidth = '';
+        const cells = document.querySelectorAll(`td:nth-child(${index + 1})`);
+        cells.forEach(cell => {
+            cell.style.width = '';
+            cell.style.minWidth = '';
+        });
+    });
+    
+    showNotification('Column widths reset to default', 'success');
+}
+
+function showColumnWidthMenu() {
+    const menu = document.createElement('div');
+    menu.className = 'column-width-menu';
+    menu.innerHTML = `
+        <div class="menu-header">Column Width Options</div>
+        <div class="menu-item" onclick="expandAllColumns()">
+            <i class="fas fa-expand-arrows-alt"></i> Expand All Columns
+        </div>
+        <div class="menu-item" onclick="reduceAllColumns()">
+            <i class="fas fa-compress-arrows-alt"></i> Reduce All Columns
+        </div>
+        <div class="menu-item" onclick="autoFitColumns()">
+            <i class="fas fa-magic"></i> Auto-Fit to Content
+        </div>
+        <div class="menu-item" onclick="resetColumnWidths()">
+            <i class="fas fa-undo"></i> Reset to Default
+        </div>
+        <div class="menu-item" onclick="closeColumnWidthMenu()">
+            <i class="fas fa-times"></i> Close
+        </div>
+    `;
+    
+    // Position the menu
+    const tableContainer = document.querySelector('.table-container');
+    if (tableContainer) {
+        tableContainer.appendChild(menu);
+        
+        // Position near the table
+        const tableRect = tableContainer.getBoundingClientRect();
+        menu.style.position = 'absolute';
+        menu.style.top = '10px';
+        menu.style.right = '10px';
+        menu.style.zIndex = '1000';
+    }
+}
+
+function closeColumnWidthMenu() {
+    const menu = document.querySelector('.column-width-menu');
+    if (menu) {
+        menu.remove();
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Enhanced column resizing with better visual feedback and multi-column support
+function makeHeadersResizable() {
+    const headers = document.querySelectorAll('#tableHeader th');
+    console.log('Making headers resizable. Found headers:', headers.length);
+    headers.forEach((header, index) => {
+        const resizer = document.createElement('div');
+        resizer.className = 'column-resizer';
+        resizer.style.position = 'absolute';
+        resizer.style.right = '0';
+        resizer.style.top = '0';
+        resizer.style.width = '8px';
+        resizer.style.height = '100%';
+        resizer.style.cursor = 'col-resize';
+        resizer.style.backgroundColor = 'transparent';
+        resizer.style.zIndex = '10';
+        
+        // Add hover effect with resize indicator
+        resizer.addEventListener('mouseenter', () => {
+            resizer.style.backgroundColor = '#2196f3';
+            resizer.style.width = '8px';
+            header.style.borderRight = '2px solid #2196f3';
+        });
+        
+        resizer.addEventListener('mouseleave', () => {
+            if (!isResizing) {
+                resizer.style.backgroundColor = 'transparent';
+                header.style.borderRight = '';
+            }
+        });
+        
+        // Enhanced resize functionality
+        resizer.onmousedown = (e) => {
+            e.preventDefault();
+            isResizing = true;
+            currentResizeColumn = index;
+            document.body.style.cursor = 'col-resize';
+            resizer.style.backgroundColor = '#1976d2';
+            header.style.borderRight = '2px solid #1976d2';
+            
+            // Add resize guide
+            const guide = document.createElement('div');
+            guide.className = 'resize-guide';
+            guide.style.position = 'absolute';
+            guide.style.top = '0';
+            guide.style.left = e.clientX + 'px';
+            guide.style.width = '2px';
+            guide.style.height = '100vh';
+            guide.style.backgroundColor = '#1976d2';
+            guide.style.zIndex = '10000';
+            guide.style.pointerEvents = 'none';
+            document.body.appendChild(guide);
+            
+            // Store guide reference
+            resizer.resizeGuide = guide;
+        };
+        
+        header.style.position = 'relative';
+        header.appendChild(resizer);
+        
+        // Make headers draggable for reordering
+        header.draggable = true;
+        header.ondragstart = (e) => {
+            isDragging = true;
+            draggedColumn = index;
+            e.dataTransfer.setData('text/plain', index);
+        };
+        
+        header.ondragover = (e) => e.preventDefault();
+        header.ondrop = (e) => {
+            e.preventDefault();
+            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            const toIndex = index;
+            if (fromIndex !== toIndex) {
+                reorderColumn(fromIndex, toIndex);
+            }
+        };
+    });
+}
+
+// Width indicator functions
+function showWidthIndicator(width) {
+    let indicator = document.getElementById('width-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'width-indicator';
+        indicator.className = 'width-indicator';
+        document.body.appendChild(indicator);
+    }
+    
+    indicator.textContent = `${width}px`;
+    indicator.style.display = 'block';
+    
+    // Position near mouse cursor
+    const mouseX = event.clientX;
+    const mouseY = event.clientY;
+    indicator.style.left = (mouseX + 10) + 'px';
+    indicator.style.top = (mouseY - 30) + 'px';
+}
+
+function hideWidthIndicator() {
+    const indicator = document.getElementById('width-indicator');
+    if (indicator) {
+        indicator.style.display = 'none';
+    }
+}
+
+// Single header action menu function
+function showHeaderActionMenu(columnName, event) {
+    // Close any existing menus first
+    closeHeaderActionMenu();
+    
+    const menu = document.createElement('div');
+    menu.className = 'header-action-menu';
+    menu.innerHTML = `
+        <div class="menu-header">${columnName}</div>
+        <div class="menu-item" onclick="sortByColumn('${columnName}'); closeHeaderActionMenu();">
+            <i class="fas fa-sort"></i> Sort Column
+        </div>
+        <div class="menu-item" onclick="showColumnFilter('${columnName}'); closeHeaderActionMenu();">
+            <i class="fas fa-filter"></i> Filter Column
+        </div>
+        <div class="menu-item" onclick="showColumnStats('${columnName}'); closeHeaderActionMenu();">
+            <i class="fas fa-chart-bar"></i> Column Stats
+        </div>
+        <div class="menu-item" onclick="renameColumn('${columnName}'); closeHeaderActionMenu();">
+            <i class="fas fa-edit"></i> Rename Column
+        </div>
+        <div class="menu-item" onclick="hideColumn('${columnName}'); closeHeaderActionMenu();">
+            <i class="fas fa-eye-slash"></i> Hide Column
+        </div>
+        <div class="menu-item" onclick="clearColumnFilter('${columnName}'); closeHeaderActionMenu();">
+            <i class="fas fa-times"></i> Clear Filter
+        </div>
+    `;
+    
+    // Position the menu near the button
+    const button = event.target.closest('.header-action-btn');
+    const buttonRect = button.getBoundingClientRect();
+    
+    menu.style.position = 'absolute';
+    menu.style.top = (buttonRect.bottom + 5) + 'px';
+    menu.style.left = (buttonRect.left - 150) + 'px'; // Align to the right of the button
+    menu.style.zIndex = '1000';
+    
+    document.body.appendChild(menu);
+    
+    // Close menu when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', closeHeaderActionMenu);
+    }, 100);
+}
+
+function closeHeaderActionMenu() {
+    const menu = document.querySelector('.header-action-menu');
+    if (menu) {
+        menu.remove();
+    }
+    document.removeEventListener('click', closeHeaderActionMenu);
+}
+
+// Full-screen table functionality
+function toggleFullScreen() {
+    const tableContainer = document.querySelector('.table-container');
+    const tableControls = document.querySelector('.table-controls');
+    const activeFilters = document.getElementById('activeFilters');
+    const pagination = document.getElementById('pagination');
+    const tableInfo = document.querySelector('.table-info');
+    const appHeader = document.querySelector('.app-header');
+    const tabNavigation = document.querySelector('.tab-navigation');
+    const uploadSection = document.querySelector('.upload-section');
+    const floatingAiBtn = document.querySelector('.floating-ai-btn');
+    
+    if (!tableContainer.classList.contains('fullscreen-mode')) {
+        // Enter full-screen mode
+        tableContainer.classList.add('fullscreen-mode');
+        
+        // Hide other UI elements
+        if (tableControls) tableControls.style.display = 'none';
+        if (activeFilters) activeFilters.style.display = 'none';
+        if (pagination) pagination.style.display = 'none';
+        if (tableInfo) tableInfo.style.display = 'none';
+        if (appHeader) appHeader.style.display = 'none';
+        if (tabNavigation) tabNavigation.style.display = 'none';
+        if (uploadSection) uploadSection.style.display = 'none';
+        if (floatingAiBtn) floatingAiBtn.style.display = 'none';
+        
+        // Add full-screen controls
+        addFullScreenControls();
+        
+        // Update button
+        const fullScreenBtn = document.querySelector('button[onclick="toggleFullScreen()"]');
+        if (fullScreenBtn) {
+            fullScreenBtn.innerHTML = '<i class="fas fa-compress"></i> Exit Full Screen';
+            fullScreenBtn.onclick = toggleFullScreen;
+        }
+        
+        // Add escape key listener
+        document.addEventListener('keydown', handleFullScreenEscape);
+        
+        showNotification('Entered full-screen mode. Press ESC to exit.', 'info');
+    } else {
+        // Exit full-screen mode
+        tableContainer.classList.remove('fullscreen-mode');
+        
+        // Show other UI elements
+        if (tableControls) tableControls.style.display = '';
+        if (activeFilters) activeFilters.style.display = '';
+        if (pagination) pagination.style.display = '';
+        if (tableInfo) tableInfo.style.display = '';
+        if (appHeader) appHeader.style.display = '';
+        if (tabNavigation) tabNavigation.style.display = '';
+        if (uploadSection) uploadSection.style.display = '';
+        if (floatingAiBtn) floatingAiBtn.style.display = '';
+        
+        // Remove full-screen controls
+        removeFullScreenControls();
+        
+        // Update button
+        const fullScreenBtn = document.querySelector('button[onclick="toggleFullScreen()"]');
+        if (fullScreenBtn) {
+            fullScreenBtn.innerHTML = '<i class="fas fa-expand"></i> Full Screen';
+            fullScreenBtn.onclick = toggleFullScreen;
+        }
+        
+        // Remove escape key listener
+        document.removeEventListener('keydown', handleFullScreenEscape);
+        
+        showNotification('Exited full-screen mode.', 'info');
+    }
+}
+
+function addFullScreenControls() {
+    const tableContainer = document.querySelector('.table-container');
+    
+    // Create full-screen header
+    const fullScreenHeader = document.createElement('div');
+    fullScreenHeader.className = 'fullscreen-header';
+    fullScreenHeader.innerHTML = `
+        <div class="fullscreen-title">
+            <i class="fas fa-table"></i>
+            <span>CSV Data Viewer - Full Screen Mode</span>
+        </div>
+        <div class="fullscreen-controls">
+            <button class="btn btn-sm btn-secondary" onclick="exportData('csv')" title="Export CSV">
+                <i class="fas fa-download"></i>
+            </button>
+            <button class="btn btn-sm btn-secondary" onclick="toggleFullScreen()" title="Exit Full Screen">
+                <i class="fas fa-compress"></i>
+            </button>
+        </div>
+    `;
+    
+    tableContainer.insertBefore(fullScreenHeader, tableContainer.firstChild);
+}
+
+function removeFullScreenControls() {
+    const fullScreenHeader = document.querySelector('.fullscreen-header');
+    if (fullScreenHeader) {
+        fullScreenHeader.remove();
+    }
+}
+
+function handleFullScreenEscape(event) {
+    if (event.key === 'Escape') {
+        toggleFullScreen();
     }
 }

@@ -603,7 +603,7 @@ body {
     cursor: pointer;
     user-select: none;
     transition: background-color 0.2s ease;
-    min-width: 120px;
+    min-width: 20px;
 }
 
 .excel-table th:hover {
@@ -880,7 +880,7 @@ body {
 /* Responsive adjustments for headers */
 @media (max-width: 768px) {
     .excel-table th {
-        min-width: 100px;
+        min-width: 15px;
         padding: 6px 4px;
     }
     
@@ -3014,4 +3014,452 @@ body {
 
 .mode-btn i {
     font-size: 11px;
+}
+
+/* Column Drag and Drop Styles */
+th.draggable {
+    cursor: grab;
+    user-select: none;
+}
+
+th.draggable:active {
+    cursor: grabbing;
+}
+
+th.dragging {
+    opacity: 0.5;
+    background-color: #e3f2fd !important;
+    border: 2px dashed #2196f3 !important;
+}
+
+th.drag-over {
+    background-color: #fff3e0 !important;
+    border: 2px dashed #ff9800 !important;
+}
+
+th.drag-over::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -2px;
+    width: 4px;
+    height: 100%;
+    background-color: #ff9800;
+}
+
+/* Visual feedback for drag zones */
+th.drag-zone-left {
+    border-left: 3px solid #2196f3;
+}
+
+th.drag-zone-right {
+    border-right: 3px solid #2196f3;
+}
+
+/* Smooth transitions for drag states */
+th {
+    transition: all 0.2s ease;
+}
+
+/* Drag handle indicator */
+th::after {
+    content: '⋮⋮';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ccc;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+th:hover::after {
+    opacity: 1;
+}
+
+th.dragging::after {
+    opacity: 0;
+}
+
+/* Ensure headers are positioned relatively for absolute positioning of pseudo-elements */
+th {
+    position: relative;
+}
+
+/* Column Width Menu Styles */
+.column-width-menu {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0;
+    min-width: 200px;
+    font-size: 14px;
+    z-index: 1000;
+}
+
+.column-width-menu .menu-header {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+    border-radius: 8px 8px 0 0;
+    color: #333;
+}
+
+.column-width-menu .menu-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.column-width-menu .menu-item:last-child {
+    border-bottom: none;
+    border-radius: 0 0 8px 8px;
+}
+
+.column-width-menu .menu-item:hover {
+    background-color: #f8f9fa;
+}
+
+.column-width-menu .menu-item i {
+    width: 16px;
+    color: #666;
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.notification-info {
+    background-color: #2196f3;
+}
+
+.notification-success {
+    background-color: #4caf50;
+}
+
+.notification-warning {
+    background-color: #ff9800;
+}
+
+.notification-error {
+    background-color: #f44336;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Enhanced Column Resizer */
+.column-resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+    z-index: 10;
+}
+
+.column-resizer:hover {
+    background-color: #2196f3;
+    width: 8px;
+}
+
+.column-resizer:active {
+    background-color: #1976d2;
+}
+
+/* Resize Guide */
+.resize-guide {
+    position: absolute;
+    width: 2px;
+    height: 100vh;
+    background-color: #1976d2;
+    z-index: 10000;
+    pointer-events: none;
+    animation: fadeIn 0.2s ease;
+}
+
+/* Width Indicator */
+.width-indicator {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 10001;
+    pointer-events: none;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Enhanced table cell width management */
+td, th {
+    min-width: 20px;
+    max-width: 800px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: width 0.1s ease;
+}
+
+td:hover, th:hover {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* Visual feedback for resizing */
+th.resizing {
+    border-right: 2px solid #1976d2 !important;
+}
+
+/* Responsive column widths */
+@media (max-width: 768px) {
+    td, th {
+        min-width: 15px;
+        max-width: 300px;
+    }
+    
+    .column-resizer {
+        width: 6px;
+    }
+}
+
+/* Single Header Action Button */
+.header-action-btn {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.header-action-btn:hover {
+    background-color: #f0f0f0;
+    color: #333;
+    opacity: 1;
+}
+
+.header-action-btn:active {
+    background-color: #e0e0e0;
+}
+
+/* Header Action Menu */
+.header-action-menu {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0;
+    min-width: 180px;
+    font-size: 14px;
+    z-index: 1000;
+    animation: slideInDown 0.2s ease;
+}
+
+.header-action-menu .menu-header {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+    border-radius: 8px 8px 0 0;
+    color: #333;
+    text-align: center;
+}
+
+.header-action-menu .menu-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-action-menu .menu-item:last-child {
+    border-bottom: none;
+    border-radius: 0 0 8px 8px;
+}
+
+.header-action-menu .menu-item:hover {
+    background-color: #f8f9fa;
+}
+
+.header-action-menu .menu-item i {
+    width: 16px;
+    color: #666;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Remove old header button styles */
+.header-actions {
+    display: none;
+}
+
+.header-btn {
+    display: none;
+}
+
+/* Full-Screen Mode Styles */
+.fullscreen-mode {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 10000 !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: auto !important;
+}
+
+.fullscreen-mode .excel-table {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    min-height: calc(100vh - 60px) !important;
+}
+
+.fullscreen-mode .table-container {
+    height: calc(100vh - 60px) !important;
+    overflow: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    margin-top: 60px !important;
+}
+
+.fullscreen-header {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10001;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fullscreen-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.fullscreen-title i {
+    color: #007bff;
+}
+
+.fullscreen-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.fullscreen-controls .btn {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Full-screen table optimizations */
+.fullscreen-mode .excel-table th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 10;
+}
+
+.fullscreen-mode .excel-table td {
+    padding: 8px 12px;
+}
+
+/* Responsive full-screen */
+@media (max-width: 768px) {
+    .fullscreen-header {
+        padding: 8px 15px;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .fullscreen-title {
+        font-size: 14px;
+    }
+    
+    .fullscreen-controls {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Animation for full-screen transition */
+.fullscreen-mode {
+    animation: fullscreenEnter 0.3s ease;
+}
+
+@keyframes fullscreenEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
