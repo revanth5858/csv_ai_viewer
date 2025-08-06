@@ -483,9 +483,11 @@ function updateTableData() {
     
     const startIndex = currentPage * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
-    console.log('filteredData for table:', filteredData);
+    console.log('updateTableData - filteredData for table:', filteredData);
+    console.log('updateTableData - filteredData length:', filteredData.length);
     const pageData = filteredData.slice(startIndex, endIndex);
-    console.log('pageData for table:', pageData);
+    console.log('updateTableData - pageData for table:', pageData);
+    console.log('updateTableData - pageData length:', pageData.length);
     
     pageData.forEach((row, index) => {
         const tr = document.createElement('tr');
@@ -5571,15 +5573,15 @@ Now, output the code:`;
                 console.log('Filter code received:', filterCode);
                 console.log('Current data before filter:', currentData);
                 
-                let filteredData = applyFilterToData(filterCode);
-                console.log('Filtered data result:', filteredData);
+                const filteredResult = applyFilterToData(filterCode);
+                console.log('Filtered data result:', filteredResult);
                 
-                // Ensure filteredData is an array
-                const filteredArray = Array.isArray(filteredData) ? filteredData : [filteredData];
+                // Ensure filteredResult is an array
+                const filteredArray = Array.isArray(filteredResult) ? filteredResult : [filteredResult];
                 
                 // Update the table with filtered data
                 currentData = filteredArray;
-                filteredData = [...filteredArray];
+                filteredData = [...filteredArray]; // Update global filteredData
                 // Fix: Convert array of arrays to array of objects if needed
                 const headers = Object.keys(originalData[0] || {});
                 if (filteredData.length > 0 && Array.isArray(filteredData[0])) {
@@ -5588,6 +5590,8 @@ Now, output the code:`;
                     );
                 }
                 currentPage = 0;
+                console.log('Before populateTable - filteredData:', filteredData);
+                console.log('Before populateTable - filteredData length:', filteredData.length);
                 populateTable();
                 
                 let message = '';
@@ -5606,15 +5610,15 @@ Now, output the code:`;
                 console.log('Filter code received from backend:', filterCode);
                 console.log('Current data before filter:', currentData);
                 
-                let filteredData = applyFilterToData(filterCode);
-                console.log('Filtered data result:', filteredData);
+                const filteredResult = applyFilterToData(filterCode);
+                console.log('Filtered data result:', filteredResult);
                 
-                // Ensure filteredData is an array
-                const filteredArray = Array.isArray(filteredData) ? filteredData : [filteredData];
+                // Ensure filteredResult is an array
+                const filteredArray = Array.isArray(filteredResult) ? filteredResult : [filteredResult];
                 
                 // Update the table with filtered data
                 currentData = filteredArray;
-                filteredData = [...filteredArray];
+                filteredData = [...filteredArray]; // Update global filteredData
                 // Fix: Convert array of arrays to array of objects if needed
                 const headers = Object.keys(originalData[0] || {});
                 if (filteredData.length > 0 && Array.isArray(filteredData[0])) {
@@ -5623,6 +5627,8 @@ Now, output the code:`;
                     );
                 }
                 currentPage = 0;
+                console.log('Before populateTable - filteredData:', filteredData);
+                console.log('Before populateTable - filteredData length:', filteredData.length);
                 populateTable();
                 
                 let message = '';
@@ -5660,6 +5666,8 @@ function applyFilterToData(filterCode) {
     console.log('Applying filter code:', filterCode);
     console.log('DataFrame (df) available:', df);
     console.log('DataFrame length:', df ? df.length : 'undefined');
+    console.log('First row sample:', df && df.length > 0 ? df[0] : 'No data');
+    console.log('Column names:', df && df.length > 0 ? Object.keys(df[0]) : 'No columns');
     
     let filteredData;
     try {
@@ -5668,6 +5676,17 @@ function applyFilterToData(filterCode) {
         console.log('Raw filtered data:', filteredData);
         console.log('Filtered data type:', typeof filteredData);
         console.log('Is array:', Array.isArray(filteredData));
+        console.log('Filtered data length:', filteredData ? filteredData.length : 'undefined');
+        
+        // Manual test of the filter
+        console.log('Manual test of filter:');
+        try {
+            const manualTest = df.filter(row => row.Country === 'Nepal');
+            console.log('Manual test result:', manualTest);
+            console.log('Manual test length:', manualTest.length);
+        } catch (e) {
+            console.log('Manual test failed:', e);
+        }
         
         // If the result is an array of arrays, convert to array of objects
         if (Array.isArray(filteredData) && filteredData.length > 0 && Array.isArray(filteredData[0])) {
@@ -5678,6 +5697,7 @@ function applyFilterToData(filterCode) {
         }
         // If the result is not an array of objects, show error
         if (!(Array.isArray(filteredData) && filteredData.length > 0 && typeof filteredData[0] === 'object' && !Array.isArray(filteredData[0]))) {
+            console.error('Invalid filter result:', filteredData);
             alert('AI filter did not return an array of objects. Please rephrase your filter or try again.');
             return [];
         }
