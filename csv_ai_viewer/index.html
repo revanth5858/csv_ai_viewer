@@ -949,10 +949,14 @@
                         </div>
                     </div>
                     <div class="ai-chat-input">
+                        <div class="input-group" style="margin-bottom: 10px;">
+                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            <input type="password" id="geminiApiKey" class="form-control" placeholder="Enter Gemini API Key..." autocomplete="off">
+                        </div>
                         <div class="input-group">
-                            <input type="text" id="aiQueryInput" placeholder="Ask me anything about your data..." onkeypress="handleAIQueryKeyPress(event)">
+                            <input type="text" id="aiQueryInput" placeholder="Ask a question or describe a filter..." onkeypress="handleAIQueryKeyPress(event)">
                             <button class="btn btn-ai" onclick="sendAIQuery()">
-                                <i class="fas fa-paper-plane"></i>
+                                <i class="fas fa-paper-plane"></i> Ask
                             </button>
                         </div>
                         <div class="ai-suggestions" id="querySuggestions">
