@@ -41,27 +41,22 @@ let currentAIMode = 'query';
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Application initializing...');
-    
     try {
-    setupFileUpload();
-    setupDragAndDrop();
-    
-    // Test backend connection
-    testBackendConnection().then(isConnected => {
-        if (isConnected) {
-            console.log('Backend is ready');
-        } else {
-            console.warn('Backend connection failed - some features may not work');
-        }
+        setupFileUpload();
+        setupDragAndDrop();
+
+        // Test backend connection
+        testBackendConnection().then(isConnected => {
+            if (!isConnected) {
+                console.warn('Backend connection failed - some features may not work');
+            }
         }).catch(error => {
             console.error('Backend connection test failed:', error);
-    });
-        
+        });
+
         // Initialize chart functionality
         initializeChartSystem();
     
-    console.log('Application initialization completed');
     } catch (error) {
         console.error('Error during application initialization:', error);
         alert('Application initialization failed. Please refresh the page.');
@@ -70,60 +65,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize chart system
 function initializeChartSystem() {
-    console.log('Initializing chart system...');
-    
     try {
         // Add event listeners for chart controls
         const chartTypeSelect = document.getElementById('chartType');
         const xAxisSelect = document.getElementById('xAxis');
         const yAxisSelect = document.getElementById('yAxis');
         
-        console.log('Chart elements found:', {
-            chartTypeSelect: !!chartTypeSelect,
-            xAxisSelect: !!xAxisSelect,
-            yAxisSelect: !!yAxisSelect
-        });
-        
         if (chartTypeSelect) {
             chartTypeSelect.addEventListener('change', function() {
-                console.log('Chart type changed to:', this.value);
                 try {
                     updateChart();
                 } catch (error) {
                     console.error('Error in chart type change handler:', error);
                 }
             });
-        } else {
-            console.warn('Chart type select not found');
         }
         
         if (xAxisSelect) {
             xAxisSelect.addEventListener('change', function() {
-                console.log('X-axis changed to:', this.value);
                 try {
                     updateChart();
                 } catch (error) {
                     console.error('Error in X-axis change handler:', error);
                 }
             });
-        } else {
-            console.warn('X-axis select not found');
         }
         
         if (yAxisSelect) {
             yAxisSelect.addEventListener('change', function() {
-                console.log('Y-axis changed to:', this.value);
                 try {
                     updateChart();
                 } catch (error) {
                     console.error('Error in Y-axis change handler:', error);
                 }
             });
-        } else {
-            console.warn('Y-axis select not found');
         }
-        
-        console.log('Chart system initialized successfully');
     } catch (error) {
         console.error('Error initializing chart system:', error);
     }
@@ -173,9 +149,6 @@ function handleFileSelect(event) {
 
 // Handle file processing
 function handleFile(file) {
-    console.log('Handling file:', file.name);
-    console.log('File size:', file.size);
-    
     if (!file.name.toLowerCase().endsWith('.csv')) {
         alert('Please select a CSV file.');
         return;
@@ -196,9 +169,7 @@ function handleFile(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            console.log('File read successfully');
             const csv = e.target.result;
-            console.log('CSV content length:', csv.length);
             
             if (!csv || csv.trim() === '') {
                 alert('The CSV file appears to be empty.');
@@ -207,7 +178,6 @@ function handleFile(file) {
             }
             
             const data = parseCSV(csv);
-            console.log('Parsed data length:', data.length);
             
             if (data.length === 0) {
                 alert('The CSV file appears to be empty or could not be parsed. Please check the file format.');
@@ -227,19 +197,11 @@ function handleFile(file) {
             currentData = [...data];
             filteredData = [...data];
             
-            console.log('Data assigned to global variables');
-            console.log('originalData length:', originalData.length);
-            console.log('currentData length:', currentData.length);
-            console.log('filteredData length:', filteredData.length);
-            console.log('Sample data structure:', Object.keys(firstRow));
-            
             displayFileInfo(file, data);
             populateTable();
             populateSortOptions();
             showTableSection();
             hideLoading();
-            
-            console.log('File processing completed successfully');
             
         } catch (error) {
             console.error('Error parsing CSV:', error);
@@ -259,17 +221,12 @@ function handleFile(file) {
 
 // Parse CSV data with improved error handling
 function parseCSV(csv) {
-    console.log('Parsing CSV data...');
-    console.log('CSV length:', csv.length);
-    
     try {
         // Handle different line endings
         const normalizedCsv = csv.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         const lines = normalizedCsv.split('\n');
-        console.log('Number of lines:', lines.length);
         
         if (lines.length === 0) {
-            console.error('No lines found in CSV');
             return [];
         }
         
@@ -283,18 +240,14 @@ function parseCSV(csv) {
         }
         
         if (headerLineIndex >= lines.length) {
-            console.error('No non-empty lines found in CSV');
             return [];
         }
         
         // Parse headers with proper CSV handling
         const headerLine = lines[headerLineIndex];
         const headers = parseCSVLine(headerLine);
-        console.log('Headers found:', headers);
-        console.log('Number of headers:', headers.length);
         
         if (headers.length === 0) {
-            console.error('No headers found in CSV');
             return [];
         }
         
@@ -318,12 +271,6 @@ function parseCSV(csv) {
                 console.warn(`Error parsing line ${i + 1}:`, error);
                 // Continue processing other lines
             }
-        }
-        
-        console.log('Parsed data rows:', data.length);
-        if (data.length > 0) {
-            console.log('Sample row:', data[0]);
-            console.log('Sample row keys:', Object.keys(data[0]));
         }
         
         return data;
@@ -466,11 +413,7 @@ function updateTableData() {
     
     const startIndex = currentPage * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
-    console.log('updateTableData - filteredData for table:', filteredData);
-    console.log('updateTableData - filteredData length:', filteredData.length);
     const pageData = filteredData.slice(startIndex, endIndex);
-    console.log('updateTableData - pageData for table:', pageData);
-    console.log('updateTableData - pageData length:', pageData.length);
     
     pageData.forEach((row, index) => {
         const tr = document.createElement('tr');
@@ -524,6 +467,17 @@ function updateCellValue(rowIndex, input) {
 }
 
 function evaluateFormula(formula, rowIndex, colIndex) {
+    const safeEval = (expr) => {
+        // This is a very basic and limited safe eval.
+        // It only handles simple arithmetic.
+        // A proper library should be used for a real application.
+        try {
+            return new Function(`return ${expr}`)();
+        } catch (e) {
+            return '#ERROR';
+        }
+    };
+
     try {
         // Handle basic functions
         if (formula.startsWith('SUM(')) {
@@ -551,9 +505,8 @@ function evaluateFormula(formula, rowIndex, colIndex) {
         }
         
         // Evaluate the processed formula
-        return eval(processedFormula);
+        return safeEval(processedFormula);
     } catch (error) {
-        console.error('Formula error:', error);
         return '#ERROR';
     }
 }
@@ -1146,25 +1099,19 @@ function showTableSection() {
     if (aiSection) aiSection.style.display = 'block';
     // Initialize dashboard if data is available with proper timing
     if (currentData.length > 0) {
-        console.log('=== Initializing dashboard in showTableSection ===');
-        console.log('Data length:', currentData.length);
         setTimeout(() => {
             try {
-                console.log('Calling dashboard initialization functions...');
                 updateDashboardMetrics();
                 generateDataInsights();
                 populateChartOptions();
                 generateQuickCharts();
-                console.log('Dashboard initialization completed');
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
                 setTimeout(() => {
                     try {
-                        console.log('Retrying dashboard initialization...');
                         const elements = checkDashboardElements();
                         if (elements.xAxis && elements.yAxis) {
                             populateChartOptions();
-                            console.log('Chart options populated on retry');
                         }
                     } catch (retryError) {
                         console.error('Dashboard initialization retry failed:', retryError);
@@ -1239,14 +1186,15 @@ async function askAI() {
             },
             body: JSON.stringify({
                 csvData: csvData,
-                question: question
+                question: question,
+                apiKey: document.getElementById('geminiApiKey').value.trim()
             })
         });
         
         const result = await response.json();
         
         if (response.ok) {
-            document.getElementById('aiResponseText').textContent = result.response;
+            document.getElementById('aiResponseText').textContent = result.output;
             document.getElementById('aiResponse').style.display = 'block';
         } else {
             document.getElementById('aiResponseText').textContent = `Error: ${result.error}`;
@@ -1255,7 +1203,7 @@ async function askAI() {
         
     } catch (error) {
         console.error('Error calling AI API:', error);
-        document.getElementById('aiResponseText').textContent = `Error connecting to AI service: ${error.message}. Please ensure the server is running and Ollama is available.`;
+        document.getElementById('aiResponseText').textContent = `Error connecting to AI service: ${error.message}. Please ensure the server is running and Gemini API key is valid.`;
         document.getElementById('aiResponse').style.display = 'block';
     } finally {
         hideLoading();
@@ -1568,8 +1516,6 @@ window.onclick = function(event) {
 
 // Tab switching functionality
 function switchTab(tabName) {
-    console.log('=== Switching to tab ===:', tabName);
-    
     // Update tab buttons
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -1609,8 +1555,6 @@ function switchTab(tabName) {
     
     // If switching to dashboard, update metrics and insights with better timing
     if (tabName === 'dashboard' && currentData.length > 0) {
-        console.log('Initializing dashboard with data length:', currentData.length);
-        
         // Initialize chart area with placeholder if empty
         const chartArea = document.getElementById('chartArea');
         if (chartArea && chartArea.innerHTML.trim() === '') {
@@ -1620,33 +1564,27 @@ function switchTab(tabName) {
         // Use a longer delay to ensure DOM elements are ready
         setTimeout(() => {
             try {
-                console.log('Initializing dashboard functions...');
                 updateDashboardMetrics();
                 generateDataInsights();
                 populateChartOptions();
                 generateQuickCharts();
-                console.log('Dashboard initialization completed successfully');
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
                 // Try again with an even longer delay
                 setTimeout(() => {
                     try {
-                        console.log('Retrying dashboard initialization...');
                         updateDashboardMetrics();
                         generateDataInsights();
                         populateChartOptions();
                         generateQuickCharts();
-                        console.log('Dashboard initialization retry completed');
                     } catch (retryError) {
                         console.error('Dashboard initialization retry failed:', retryError);
                         // Final attempt with even longer delay
                         setTimeout(() => {
                             try {
-                                console.log('Final dashboard initialization attempt...');
                                 const elements = checkDashboardElements();
                                 if (elements.xAxis && elements.yAxis) {
                                     populateChartOptions();
-                                    console.log('Chart options populated on final attempt');
                                 }
                             } catch (finalError) {
                                 console.error('Final dashboard initialization failed:', finalError);
@@ -1657,7 +1595,6 @@ function switchTab(tabName) {
             }
         }, 300);
     } else if (tabName === 'dashboard' && currentData.length === 0) {
-        console.log('No data available for dashboard');
         // Show placeholder for empty dashboard
         const chartArea = document.getElementById('chartArea');
         if (chartArea) {
@@ -1668,8 +1605,6 @@ function switchTab(tabName) {
 
 // Generate chart HTML
 function generateChartHtml(chartType, data, xAxis, yAxis) {
-    console.log('generateChartHtml called with:', { chartType, dataLength: data.length, xAxis, yAxis });
-    
     if (data.length === 0) {
         return '<div class="chart-placeholder"><p>No data available for this chart</p></div>';
     }
@@ -1717,20 +1652,19 @@ function generateChartHtml(chartType, data, xAxis, yAxis) {
         `;
     } else if (chartType === 'pie') {
         try {
-            console.log('Generating pie chart with data:', data);
-        const total = data.reduce((sum, d) => sum + d.value, 0);
-        if (total === 0) return '<div class="chart-placeholder"><p>No data to display</p></div>';
-        
+            const total = data.reduce((sum, d) => sum + d.value, 0);
+            if (total === 0) return '<div class="chart-placeholder"><p>No data to display</p></div>';
+
             let currentAngle = -90; // Start from top (12 o'clock position)
-        const centerX = 200;
-        const centerY = 200;
-        const radius = 150;
-        
+            const centerX = 200;
+            const centerY = 200;
+            const radius = 150;
+
             const pieSlices = data.map((d, i) => {
-                        const angle = (d.value / total) * 360;
-                        const startAngle = currentAngle;
-                        const endAngle = currentAngle + angle;
-                        
+                const angle = (d.value / total) * 360;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + angle;
+
                 // Convert angles to radians
                 const startRad = startAngle * Math.PI / 180;
                 const endRad = endAngle * Math.PI / 180;
@@ -1742,14 +1676,14 @@ function generateChartHtml(chartType, data, xAxis, yAxis) {
                 const y2 = centerY + radius * Math.sin(endRad);
                 
                 // Determine if we need a large arc flag
-                        const largeArcFlag = angle > 180 ? 1 : 0;
+                const largeArcFlag = angle > 180 ? 1 : 0;
                 
                 // Create the path for the pie slice - fixed SVG path
-                        const path = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
-                        
-                        currentAngle += angle;
-                        
-                        return `<path d="${path}" fill="${colors[i % colors.length]}" stroke="white" stroke-width="2"/>`;
+                const path = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+
+                currentAngle += angle;
+
+                return `<path d="${path}" fill="${colors[i % colors.length]}" stroke="white" stroke-width="2"/>`;
             }).join('');
             
             const legend = data.map((d, i) => `
@@ -1759,7 +1693,6 @@ function generateChartHtml(chartType, data, xAxis, yAxis) {
                         </div>
             `).join('');
             
-            console.log('Pie chart generated successfully');
             return `
                 <div class="chart-container-inner">
                     <svg width="400" height="400" viewBox="0 0 400 400">
@@ -1955,32 +1888,18 @@ function getHeatmapColor(value, maxValue) {
 
 // Enhanced populate chart options
 function populateChartOptions() {
-    console.log('populateChartOptions called');
-    console.log('currentData length:', currentData.length);
-    
     if (currentData.length === 0) {
-        console.log('No data available for chart options');
         return;
     }
     
     const headers = Object.keys(currentData[0]);
-    console.log('Headers found:', headers);
     
     const xAxisSelect = document.getElementById('xAxis');
     const yAxisSelect = document.getElementById('yAxis');
     const colorBySelect = document.getElementById('colorBy');
     
-    console.log('DOM elements found:', {
-        xAxisSelect: !!xAxisSelect,
-        yAxisSelect: !!yAxisSelect,
-        colorBySelect: !!colorBySelect
-    });
-    
     if (!xAxisSelect || !yAxisSelect || !colorBySelect) {
         console.error('Chart option elements not found in DOM');
-        console.error('xAxisSelect:', xAxisSelect);
-        console.error('yAxisSelect:', yAxisSelect);
-        console.error('colorBySelect:', colorBySelect);
         return;
     }
     
@@ -1992,8 +1911,6 @@ function populateChartOptions() {
         
         // Add options
         headers.forEach((header, index) => {
-            console.log(`Adding header option ${index + 1}:`, header);
-            
             const xOption = document.createElement('option');
             xOption.value = header;
             xOption.textContent = header;
@@ -2009,23 +1926,6 @@ function populateChartOptions() {
             colorOption.textContent = header;
             colorBySelect.appendChild(colorOption);
         });
-        
-        console.log('Chart options populated successfully');
-        console.log('X-Axis options:', xAxisSelect.options.length);
-        console.log('Y-Axis options:', yAxisSelect.options.length);
-        console.log('Color By options:', colorBySelect.options.length);
-        
-        // Verify the options were actually added
-        if (xAxisSelect.options.length <= 1) {
-            console.warn('X-Axis options not properly populated');
-        }
-        if (yAxisSelect.options.length <= 1) {
-            console.warn('Y-Axis options not properly populated');
-        }
-        if (colorBySelect.options.length <= 1) {
-            console.warn('Color By options not properly populated');
-        }
-        
     } catch (error) {
         console.error('Error populating chart options:', error);
     }
@@ -3012,10 +2912,7 @@ function refreshChartOptions() {
 
 // Generate data insights
 function generateDataInsights() {
-    console.log('generateDataInsights called');
-    
     if (currentData.length === 0) {
-        console.log('No data available for insights');
         return;
     }
     
@@ -3061,8 +2958,6 @@ function generateDataInsights() {
             }
         }
         
-        console.log('Data insights generated:', insights);
-        
         // Update insights panel if it exists
         const insightsPanel = document.querySelector('.insights-content');
         if (insightsPanel) {
@@ -3078,48 +2973,33 @@ function generateDataInsights() {
 
 // Create chart function
 function createChart() {
-    console.log('=== createChart called ===');
-    
     try {
-    const chartType = document.getElementById('chartType').value;
-    const xAxis = document.getElementById('xAxis').value;
-    const yAxis = document.getElementById('yAxis').value;
-    
-    console.log('Chart parameters:', { chartType, xAxis, yAxis });
-    console.log('Current data length:', currentData.length);
-    
-    if (!chartType || !xAxis || !yAxis) {
-        console.error('Missing chart parameters:', { chartType, xAxis, yAxis });
-        alert('Please select chart type, X-axis, and Y-axis.');
-        return;
-    }
-    
-    if (currentData.length === 0) {
-        console.error('No data available for chart creation');
-        alert('No data available for chart creation.');
-        return;
-    }
-    
-        console.log('Preparing chart data...');
+        const chartType = document.getElementById('chartType').value;
+        const xAxis = document.getElementById('xAxis').value;
+        const yAxis = document.getElementById('yAxis').value;
+
+        if (!chartType || !xAxis || !yAxis) {
+            alert('Please select chart type, X-axis, and Y-axis.');
+            return;
+        }
+
+        if (currentData.length === 0) {
+            alert('No data available for chart creation.');
+            return;
+        }
+
         const chartData = prepareChartData(chartType, xAxis, yAxis);
-        console.log('Chart data prepared:', chartData);
-        console.log('Chart data length:', chartData.length);
         
         if (chartData.length === 0) {
-            console.error('No data available for the selected chart configuration');
             alert('No data available for the selected chart configuration.');
             return;
         }
         
-        console.log('Generating chart HTML...');
         const chartHtml = generateChartHtml(chartType, chartData, xAxis, yAxis);
-        console.log('Chart HTML generated, length:', chartHtml.length);
         
         const chartArea = document.getElementById('chartArea');
         if (chartArea) {
-            console.log('Chart area found, rendering chart...');
             chartArea.innerHTML = chartHtml;
-            console.log('Chart rendered successfully');
         } else {
             console.error('Chart area not found');
             alert('Chart area not found. Please refresh the page.');
@@ -3127,7 +3007,6 @@ function createChart() {
         
     } catch (error) {
         console.error('Error creating chart:', error);
-        console.error('Error stack:', error.stack);
         alert(`Error creating chart: ${error.message}`);
     }
 }
@@ -3140,12 +3019,7 @@ function updateChart() {
 
 // Prepare chart data
 function prepareChartData(chartType, xAxis, yAxis) {
-    console.log('=== prepareChartData called ===');
-    console.log('Parameters:', { chartType, xAxis, yAxis });
-    console.log('Current data length:', currentData.length);
-    
     if (currentData.length === 0) {
-        console.log('No data available for chart preparation');
         return [];
     }
     
@@ -3155,11 +3029,7 @@ function prepareChartData(chartType, xAxis, yAxis) {
     }
     
     try {
-        console.log('Processing chart type:', chartType);
-        
         if (chartType === 'bar' || chartType === 'pie') {
-            console.log('Processing bar/pie chart data...');
-            
             if (chartType === 'pie') {
                 // For pie charts, try to use Y-axis values first, then fall back to counting X-axis
                 let pieData = [];
@@ -3178,7 +3048,6 @@ function prepareChartData(chartType, xAxis, yAxis) {
                 
                 // If no valid Y-axis data, count X-axis occurrences
                 if (pieData.length === 0) {
-                    console.log('Using X-axis count for pie chart data');
                     const counts = {};
                     currentData.forEach(row => {
                         const value = row[xAxis] || 'Unknown';
@@ -3196,7 +3065,6 @@ function prepareChartData(chartType, xAxis, yAxis) {
                 // Sort by value descending for better visualization
                 pieData.sort((a, b) => b.value - a.value);
                 
-                console.log('Pie chart data prepared:', pieData);
                 return pieData;
             } else {
                 // For bar charts, count occurrences for categorical data
@@ -3213,11 +3081,9 @@ function prepareChartData(chartType, xAxis, yAxis) {
                     label: key
                 }));
                 
-                console.log('Bar chart data prepared:', result);
                 return result;
             }
         } else if (chartType === 'line' || chartType === 'scatter' || chartType === 'area') {
-            console.log('Processing line/scatter/area chart data...');
             // Use numeric data for line/scatter/area charts
             const numericData = currentData
                 .map((row, index) => ({
@@ -3227,18 +3093,15 @@ function prepareChartData(chartType, xAxis, yAxis) {
                 }))
                 .filter(item => !isNaN(item.y));
             
-            console.log('Line/scatter/area data prepared:', numericData);
             return numericData;
             
         } else if (chartType === 'histogram') {
-            console.log('Processing histogram data...');
             // Create histogram bins
             const values = currentData
                 .map(row => parseFloat(row[yAxis]))
                 .filter(val => !isNaN(val));
             
             if (values.length === 0) {
-                console.log('No numeric values found for histogram');
                 return [];
             }
             
@@ -3269,11 +3132,9 @@ function prepareChartData(chartType, xAxis, yAxis) {
                 value: value
             }));
             
-            console.log('Histogram data prepared:', result);
             return result;
             
         } else if (chartType === 'heatmap') {
-            console.log('Processing heatmap data...');
             // Create heatmap data - use x and y axis as grid coordinates
             const xValues = [...new Set(currentData.map(row => row[xAxis]))];
             const yValues = [...new Set(currentData.map(row => row[yAxis]))];
@@ -3296,11 +3157,9 @@ function prepareChartData(chartType, xAxis, yAxis) {
                 });
             });
             
-            console.log('Heatmap data prepared:', heatmapData);
             return heatmapData;
             
         } else if (chartType === 'boxplot') {
-            console.log('Processing boxplot data...');
             // Create box plot data - group by x-axis and calculate statistics for y-axis
             const groups = {};
             currentData.forEach(row => {
@@ -3332,11 +3191,9 @@ function prepareChartData(chartType, xAxis, yAxis) {
                 };
             });
             
-            console.log('Boxplot data prepared:', result);
             return result;
             
         } else if (chartType === 'funnel') {
-            console.log('Processing funnel data...');
             // Create funnel data - use x-axis as stages, y-axis as values
             const funnelData = currentData
                 .map(row => ({
@@ -3347,11 +3204,9 @@ function prepareChartData(chartType, xAxis, yAxis) {
                 .filter(item => !isNaN(item.y))
                 .sort((a, b) => b.y - a.y); // Sort by value descending
             
-            console.log('Funnel data prepared:', funnelData);
             return funnelData;
             
         } else if (chartType === 'radar') {
-            console.log('Processing radar data...');
             // Create radar data - use x-axis as categories, y-axis as values
             const radarData = currentData
                 .map(row => ({
@@ -3361,30 +3216,24 @@ function prepareChartData(chartType, xAxis, yAxis) {
                 }))
                 .filter(item => !isNaN(item.y));
             
-            console.log('Radar data prepared:', radarData);
             return radarData;
         }
         
-        console.log('Unknown chart type:', chartType);
         return [];
         
     } catch (error) {
         console.error('Error preparing chart data:', error);
-        console.error('Error stack:', error.stack);
         return [];
     }
 }
 
 // Test backend connection
 async function testBackendConnection() {
-    console.log('Testing backend connection...');
-    
     try {
         const response = await fetch('/api/health');
         const data = await response.json();
         
         if (response.ok) {
-            console.log('Backend connection successful:', data);
             return true;
         } else {
             console.error('Backend connection failed:', data);
@@ -3934,261 +3783,6 @@ function showFormulaHelp() {
     showModal('formulaHelpModal');
 }
 
-// Missing functions for Chart operations
-function exportChart() {
-    const chartArea = document.getElementById('chartArea');
-    if (!chartArea || chartArea.innerHTML.trim() === '') {
-        alert('No chart to export');
-        return;
-    }
-    
-    // Create a canvas to capture the chart
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 800;
-    canvas.height = 600;
-    
-    // Convert SVG to canvas (simplified approach)
-    const svg = chartArea.querySelector('svg');
-    if (svg) {
-        const svgData = new XMLSerializer().serializeToString(svg);
-        const img = new Image();
-        img.onload = function() {
-            ctx.drawImage(img, 0, 0);
-            canvas.toBlob(function(blob) {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'chart.png';
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-        };
-        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
-    } else {
-        alert('Chart export not available for this chart type');
-    }
-}
-
-function fullscreenChart() {
-    const chartArea = document.getElementById('chartArea');
-    if (!chartArea || chartArea.innerHTML.trim() === '') {
-        alert('No chart to display in fullscreen');
-        return;
-    }
-    
-    showModal('fullscreenChartModal');
-    // Create modal if it doesn't exist
-    if (!document.getElementById('fullscreenChartModal')) {
-    const modal = document.createElement('div');
-        modal.id = 'fullscreenChartModal';
-        modal.className = 'modal fullscreen-modal';
-    modal.innerHTML = `
-            <div class="modal-content fullscreen-content">
-                <div class="fullscreen-header">
-                    <h3>Chart Fullscreen View</h3>
-                    <button class="btn btn-secondary" onclick="closeModal('fullscreenChartModal')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div id="fullscreenChartArea" class="fullscreen-chart-area"></div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    }
-    
-    // Copy chart content to fullscreen
-    const fullscreenArea = document.getElementById('fullscreenChartArea');
-    if (fullscreenArea) {
-        fullscreenArea.innerHTML = chartArea.innerHTML;
-    }
-}
-
-function refreshChart() {
-    console.log('Refreshing chart...');
-    updateChart();
-}
-
-function drillDown() {
-    if (currentData.length === 0) {
-        alert('No data available for drill-down');
-        return;
-    }
-    
-    showModal('drillDownModal');
-    populateDrillOptions();
-}
-
-function drillUp() {
-    if (drillDownHistory.length > 0) {
-        const lastDrill = drillDownHistory.pop();
-        currentDrillLevel = lastDrill.level;
-        
-        if (drillDownHistory.length === 0) {
-            // Back to main level
-            updateChart();
-        } else {
-            // Back to previous drill level
-            const previousDrill = drillDownHistory[drillDownHistory.length - 1];
-            drillDownTo(previousDrill.column);
-        }
-        
-        updateDrillPath();
-    } else {
-        alert('Already at the top level');
-    }
-}
-
-function exportDrillData() {
-    if (currentData.length === 0) {
-        alert('No data to export');
-        return;
-    }
-    
-    // Export current drill-down data
-    const headers = Object.keys(currentData[0]);
-    let csvData = headers.join(',') + '\n';
-    
-    currentData.forEach(row => {
-        const values = headers.map(header => {
-            const value = row[header] || '';
-            return `"${value}"`;
-        });
-        csvData += values.join(',') + '\n';
-    });
-    
-    downloadFile(csvData, 'drill_down_data.csv', 'text/csv');
-}
-
-function createMiniChart(type) {
-    console.log('Creating mini chart:', type);
-    
-    let chartData = [];
-    let chartType = 'bar';
-    
-    switch (type) {
-        case 'trend':
-            chartType = 'line';
-            // Create trend data
-            if (currentData.length > 0) {
-                const numericColumns = Object.keys(currentData[0]).filter(col => 
-                    !isNaN(currentData[0][col]) && currentData[0][col] !== ''
-                );
-                if (numericColumns.length > 0) {
-                    const col = numericColumns[0];
-                    chartData = currentData.slice(0, 10).map((row, i) => ({
-                        x: `Row ${i + 1}`,
-                        y: parseFloat(row[col]) || 0
-                    }));
-                }
-            }
-            break;
-            
-        case 'distribution':
-            chartType = 'pie';
-            // Create distribution data
-            if (currentData.length > 0) {
-                const categoricalColumns = Object.keys(currentData[0]).filter(col => 
-                    isNaN(currentData[0][col]) || currentData[0][col] === ''
-                );
-                if (categoricalColumns.length > 0) {
-                    const col = categoricalColumns[0];
-                    const counts = {};
-                    currentData.forEach(row => {
-                        const value = row[col] || 'Empty';
-                        counts[value] = (counts[value] || 0) + 1;
-                    });
-                    chartData = Object.entries(counts).map(([label, value]) => ({
-                        label: label,
-                        value: value
-                    }));
-                }
-            }
-            break;
-            
-        case 'correlation':
-            chartType = 'scatter';
-            // Create correlation data
-            if (currentData.length > 0) {
-                const numericColumns = Object.keys(currentData[0]).filter(col => 
-                    !isNaN(currentData[0][col]) && currentData[0][col] !== ''
-                );
-                if (numericColumns.length >= 2) {
-                    const col1 = numericColumns[0];
-                    const col2 = numericColumns[1];
-                    chartData = currentData.slice(0, 20).map(row => ({
-                        x: parseFloat(row[col1]) || 0,
-                        y: parseFloat(row[col2]) || 0
-                    }));
-                }
-            }
-            break;
-    }
-    
-    if (chartData.length > 0) {
-        const chartHtml = generateChartHtml(chartType, chartData, 'x', 'y');
-        const targetArea = document.getElementById(`${type}Chart`);
-        if (targetArea) {
-            targetArea.innerHTML = chartHtml;
-        }
-    } else {
-        alert('No suitable data available for this chart type');
-    }
-}
-
-function initializeDashboard() {
-    console.log('=== Initializing Dashboard ===');
-    try {
-        if (currentData.length === 0) {
-            alert('No data available for dashboard initialization');
-            return;
-        }
-        
-        updateDashboardMetrics();
-        generateDataInsights();
-        populateChartOptions();
-        generateQuickCharts();
-        
-        console.log('Dashboard initialization completed successfully');
-        alert('Dashboard initialized successfully');
-        } catch (error) {
-        console.error('Dashboard initialization failed:', error);
-        alert('Dashboard initialization failed: ' + error.message);
-    }
-}
-
-function debugPieChart() {
-    console.log('=== Debugging Pie Chart ===');
-    
-    if (currentData.length === 0) {
-        alert('No data available for pie chart debugging');
-        return;
-    }
-    
-    // Test pie chart with sample data
-    const testData = [
-        { label: 'Category A', value: 30 },
-        { label: 'Category B', value: 25 },
-        { label: 'Category C', value: 45 }
-    ];
-    
-    console.log('Test data:', testData);
-    
-    try {
-        const chartHtml = generateChartHtml('pie', testData, 'label', 'value');
-        console.log('Generated chart HTML:', chartHtml);
-        
-        const chartArea = document.getElementById('chartArea');
-        if (chartArea) {
-            chartArea.innerHTML = chartHtml;
-            console.log('Pie chart displayed successfully');
-            alert('Pie chart debug completed - check console for details');
-        }
-    } catch (error) {
-        console.error('Pie chart debug failed:', error);
-        alert('Pie chart debug failed: ' + error.message);
-    }
-}
 
 // Helper functions for the missing functions
 function populateQuickStats() {
@@ -4276,353 +3870,6 @@ window.clearCache = function() {
     console.log('Cache cleared successfully. Refresh the page to see changes.');
 };
 
-// ===== ADDITIONAL MISSING FUNCTIONS =====
-
-// Find and Replace functions
-function findText() {
-    const findValue = document.getElementById('findText').value;
-    if (!findValue) {
-        alert('Please enter text to find');
-        return;
-    }
-    
-    const table = document.getElementById('dataTable');
-    if (!table) return;
-    
-    // Clear previous highlights
-    table.querySelectorAll('.highlighted').forEach(cell => {
-        cell.classList.remove('highlighted');
-    });
-    
-    // Find and highlight matches
-    const cells = table.querySelectorAll('td');
-    let found = false;
-    
-    cells.forEach(cell => {
-        if (cell.textContent.includes(findValue)) {
-            cell.classList.add('highlighted');
-            found = true;
-        }
-    });
-    
-    if (found) {
-        alert(`Found ${table.querySelectorAll('.highlighted').length} matches`);
-    } else {
-        alert('No matches found');
-    }
-}
-
-function replaceText() {
-    const findValue = document.getElementById('findText').value;
-    const replaceValue = document.getElementById('replaceText').value;
-    
-    if (!findValue) {
-        alert('Please enter text to find');
-        return;
-    }
-    
-    const table = document.getElementById('dataTable');
-    if (!table) return;
-    
-    const highlightedCells = table.querySelectorAll('.highlighted');
-    if (highlightedCells.length === 0) {
-        alert('No highlighted cells to replace. Use Find first.');
-        return;
-    }
-    
-    // Replace in highlighted cells
-    highlightedCells.forEach(cell => {
-        const input = cell.querySelector('input');
-            if (input) {
-            input.value = input.value.replace(findValue, replaceValue);
-            // Update data
-            const rowIndex = parseInt(cell.getAttribute('data-row'));
-            const colIndex = parseInt(cell.getAttribute('data-col'));
-            const headers = Object.keys(currentData[0]);
-            currentData[rowIndex][headers[colIndex]] = input.value;
-        }
-    });
-    
-    filteredData = [...currentData];
-    populateTable();
-    alert(`Replaced ${highlightedCells.length} occurrences`);
-}
-
-function replaceAll() {
-    const findValue = document.getElementById('findText').value;
-    const replaceValue = document.getElementById('replaceText').value;
-    
-    if (!findValue) {
-        alert('Please enter text to find');
-        return;
-    }
-    
-    let replacedCount = 0;
-    
-    // Replace in all data
-    currentData.forEach((row, rowIndex) => {
-        Object.keys(row).forEach((header, colIndex) => {
-            const oldValue = row[header];
-            if (oldValue && oldValue.toString().includes(findValue)) {
-                row[header] = oldValue.toString().replace(new RegExp(findValue, 'g'), replaceValue);
-                replacedCount++;
-            }
-        });
-    });
-    
-    filteredData = [...currentData];
-    populateTable();
-    alert(`Replaced ${replacedCount} occurrences`);
-}
-
-// Import/Export functions
-function showImportExportMenu() {
-    showModal('importExportModal');
-    // Create modal if it doesn't exist
-    if (!document.getElementById('importExportModal')) {
-        const modal = document.createElement('div');
-        modal.id = 'importExportModal';
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3><i class="fas fa-exchange-alt"></i> Import/Export Options</h3>
-                <div class="import-export-options">
-                    <div class="import-section">
-                        <h4>Import:</h4>
-                        <button class="btn btn-primary" onclick="importXLSX()">
-                            <i class="fas fa-file-excel"></i> Import XLSX
-                        </button>
-                        <button class="btn btn-primary" onclick="importJSON()">
-                            <i class="fas fa-file-code"></i> Import JSON
-                        </button>
-                    </div>
-                    <div class="export-section">
-                        <h4>Export:</h4>
-                        <button class="btn btn-success" onclick="exportToXLSX()">
-                            <i class="fas fa-file-excel"></i> Export XLSX
-                        </button>
-                        <button class="btn btn-success" onclick="exportToJSON()">
-                            <i class="fas fa-file-code"></i> Export JSON
-                        </button>
-                        <button class="btn btn-success" onclick="exportData('csv')">
-                            <i class="fas fa-file-csv"></i> Export CSV
-                        </button>
-                    </div>
-                </div>
-                <div class="modal-buttons">
-                    <button class="btn btn-secondary" onclick="closeModal('importExportModal')">Close</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-}
-
-function exportToXLSX() {
-    if (currentData.length === 0) {
-        alert('No data to export');
-        return;
-    }
-    
-    // Create XLSX-like CSV with proper formatting
-    const headers = Object.keys(currentData[0]);
-    let csvData = headers.join(',') + '\n';
-    
-    currentData.forEach(row => {
-        const values = headers.map(header => {
-            const value = row[header] || '';
-            return `"${value}"`;
-        });
-        csvData += values.join(',') + '\n';
-    });
-    
-    downloadFile(csvData, 'export.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-}
-
-function exportToJSON() {
-    if (currentData.length === 0) {
-        alert('No data to export');
-        return;
-    }
-    
-    const jsonData = JSON.stringify(currentData, null, 2);
-    downloadFile(jsonData, 'export.json', 'application/json');
-}
-
-function importXLSX() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xlsx,.xls,.csv';
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const csv = e.target.result;
-                    const data = parseCSV(csv);
-                    if (data.length > 0) {
-                        currentData = data;
-                        filteredData = [...currentData];
-                        populateTable();
-                        showTableSection();
-                        alert('File imported successfully');
-                    } else {
-                        alert('No data found in file');
-                    }
-                } catch (error) {
-                    alert('Error importing file: ' + error.message);
-                }
-            };
-            reader.readAsText(file);
-        }
-    };
-    input.click();
-}
-
-function importJSON() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (Array.isArray(data) && data.length > 0) {
-                        currentData = data;
-                        filteredData = [...currentData];
-                        populateTable();
-                        showTableSection();
-                        alert('JSON file imported successfully');
-                    } else {
-                        alert('Invalid JSON data');
-                    }
-                } catch (error) {
-                    alert('Error importing JSON: ' + error.message);
-                }
-            };
-            reader.readAsText(file);
-        }
-    };
-    input.click();
-}
-
-// Additional utility functions
-function showKeyboardShortcuts() {
-    showModal('keyboardShortcutsModal');
-    // Create modal if it doesn't exist
-    if (!document.getElementById('keyboardShortcutsModal')) {
-    const modal = document.createElement('div');
-    modal.id = 'keyboardShortcutsModal';
-        modal.className = 'modal';
-    modal.innerHTML = `
-            <div class="modal-content large-modal">
-                <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
-                <div class="shortcuts-content">
-                    <div class="shortcut-section">
-                        <h4>File Operations</h4>
-                            <ul>
-                                <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Save CSV</li>
-                                <li><kbd>Ctrl</kbd> + <kbd>O</kbd> - Import/Export Menu</li>
-                                <li><kbd>Ctrl</kbd> + <kbd>N</kbd> - New/Clear Data</li>
-                            </ul>
-                    </div>
-                    <div class="shortcut-section">
-                        <h4>Editing</h4>
-                            <ul>
-                                <li><kbd>Ctrl</kbd> + <kbd>Z</kbd> - Undo</li>
-                                <li><kbd>Ctrl</kbd> + <kbd>Y</kbd> - Redo</li>
-                                <li><kbd>Delete</kbd> - Clear Selected Cells</li>
-                                <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> - Add New Row</li>
-                            </ul>
-                        </div>
-                    <div class="shortcut-section">
-                        <h4>Navigation</h4>
-                            <ul>
-                                <li><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> - Navigate Cells</li>
-                                <li><kbd>Tab</kbd> - Next Cell</li>
-                                <li><kbd>Shift</kbd> + <kbd>Tab</kbd> - Previous Cell</li>
-                            </ul>
-                    </div>
-                    <div class="shortcut-section">
-                        <h4>Search & Tools</h4>
-                            <ul>
-                                <li><kbd>Ctrl</kbd> + <kbd>F</kbd> - Find/Replace</li>
-                                <li><kbd>Ctrl</kbd> + <kbd>C</kbd> - Copy Selected</li>
-                                <li><kbd>Ctrl</kbd> + <kbd>V</kbd> - Paste</li>
-                            </ul>
-                        </div>
-                    </div>
-                <div class="modal-buttons">
-                    <button class="btn btn-secondary" onclick="closeModal('keyboardShortcutsModal')">Close</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    }
-}
-
-function showHelp() {
-    showModal('helpModal');
-    // Create modal if it doesn't exist
-    if (!document.getElementById('helpModal')) {
-    const modal = document.createElement('div');
-    modal.id = 'helpModal';
-        modal.className = 'modal';
-    modal.innerHTML = `
-            <div class="modal-content large-modal">
-                <h3><i class="fas fa-question-circle"></i> CSV AI Viewer - Help Guide</h3>
-                <div class="help-content">
-                    <div class="help-section">
-                        <h4>Getting Started</h4>
-                            <ol>
-                                <li>Upload a CSV file or start with empty data</li>
-                                <li>Edit cells by clicking and typing</li>
-                                <li>Use formulas starting with = (e.g., =SUM(A1:A10))</li>
-                                <li>Select multiple cells by dragging</li>
-                                <li>Use Ctrl+C/V for copy/paste</li>
-                            </ol>
-                    </div>
-                    <div class="help-section">
-                        <h4>Features</h4>
-                            <ul>
-                                <li><strong>Multi-cell Selection:</strong> Click and drag to select ranges</li>
-                                <li><strong>Formulas:</strong> SUM, AVG, COUNT, MAX, MIN functions</li>
-                                <li><strong>Conditional Formatting:</strong> Color cells based on conditions</li>
-                                <li><strong>Data Validation:</strong> Restrict input types</li>
-                                <li><strong>Find/Replace:</strong> Search and replace text</li>
-                                <li><strong>Column Operations:</strong> Resize, reorder, freeze headers</li>
-                            </ul>
-                        </div>
-                    <div class="help-section">
-                        <h4>Charts & Visualization</h4>
-                        <ul>
-                            <li><strong>Multiple Chart Types:</strong> Bar, Line, Pie, Scatter, Area, etc.</li>
-                            <li><strong>Interactive Charts:</strong> Hover for details, click to drill down</li>
-                            <li><strong>Chart Export:</strong> Save charts as images</li>
-                            <li><strong>Dashboard:</strong> Multiple charts and metrics view</li>
-                        </ul>
-                    </div>
-                    <div class="help-section">
-                        <h4>Import/Export</h4>
-                            <ul>
-                                <li>CSV, XLSX, and JSON formats supported</li>
-                                <li>Auto-save to browser storage</li>
-                                <li>Data recovery on page reload</li>
-                            </ul>
-                            </div>
-                        </div>
-                <div class="modal-buttons">
-                    <button class="btn btn-secondary" onclick="closeModal('helpModal')">Close</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    }
-}
 
 // Dark mode functionality
 function toggleDarkMode() {
