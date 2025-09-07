@@ -1,6 +1,6 @@
 # CSV AI Viewer
 
-A comprehensive web-based CSV viewer with Excel-like features, PowerBI-style dashboard, and AI-powered data analysis capabilities.
+A comprehensive web-based CSV viewer with Excel-like features, PowerBI-style dashboard, and AI-powered data analysis capabilities using Google Gemini.
 
 ## Features
 
@@ -19,22 +19,20 @@ A comprehensive web-based CSV viewer with Excel-like features, PowerBI-style das
 - **Real-time Metrics**: Key performance indicators and data quality metrics
 
 ### AI Integration
-- **Natural Language Queries**: Ask questions about your data in plain English
-- **Intelligent Analysis**: AI-powered insights and recommendations
-- **Data Modification**: AI-assisted data cleaning and transformation
+- **Natural Language Queries**: Ask questions about your data in plain English using Google Gemini.
+- **Intelligent Analysis**: AI-powered insights and recommendations.
+- **Data Modification**: AI-assisted data cleaning and transformation.
 
 ## Setup Instructions
 
 ### Prerequisites
 
-1. **Python 3.8+** installed on your system
-2. **Ollama** installed and running (for AI features)
-   - Download from: https://ollama.ai
-   - Install a model: `ollama pull llama2`
+1. **Python 3.8+** installed on your system.
+2. **Google Gemini API Key**: You need an API key from Google AI Studio.
 
 ### Installation
 
-1. **Clone or download the project files**
+1. **Clone or download the project files.**
 
 2. **Install Python dependencies**:
    ```bash
@@ -59,25 +57,26 @@ A comprehensive web-based CSV viewer with Excel-like features, PowerBI-style das
 ## Usage
 
 ### Uploading Data
-1. Click "Choose File" or drag and drop a CSV file
-2. The application will automatically parse and display your data
-3. Use the tab navigation to switch between "Data Table" and "PowerBI Dashboard"
+1. Click "Choose File" or drag and drop a CSV file.
+2. The application will automatically parse and display your data.
+3. Use the tab navigation to switch between "Data Table" and "PowerBI Dashboard".
 
 ### Data Table Features
-- **Sorting**: Click column headers to sort data
-- **Filtering**: Use the global filter or column-specific filters
-- **Editing**: Click on any cell to edit inline
-- **Export**: Use the export buttons to download data in various formats
+- **Sorting**: Click column headers to sort data.
+- **Filtering**: Use the global filter or column-specific filters.
+- **Editing**: Click on any cell to edit inline.
+- **Export**: Use the export buttons to download data in various formats.
 
 ### Dashboard Features
-- **Chart Creation**: Select chart type, X-axis, and Y-axis to create visualizations
-- **Quick Charts**: Use the suggested charts for common visualizations
-- **Advanced Analytics**: View statistical summaries and data insights
-- **Chart Settings**: Customize chart appearance and behavior
+- **Chart Creation**: Select chart type, X-axis, and Y-axis to create visualizations.
+- **Quick Charts**: Use the suggested charts for common visualizations.
+- **Advanced Analytics**: View statistical summaries and data insights.
+- **Chart Settings**: Customize chart appearance and behavior.
 
 ### AI Analysis
-1. Type your question in the AI analysis section
-2. Ask questions like:
+1. Enter your Google Gemini API key in the provided input field.
+2. Type your question in the AI analysis section.
+3. Ask questions like:
    - "What are the main trends in this data?"
    - "Which columns have missing values?"
    - "Show me the correlation between sales and profit"
@@ -88,45 +87,38 @@ A comprehensive web-based CSV viewer with Excel-like features, PowerBI-style das
 ### Common Issues
 
 **1. "Parsing error while uploading CSV"**
-- **Solution**: The improved CSV parser now handles complex formats better
-- **Check**: Ensure your CSV file has proper headers and data
-- **Debug**: Check browser console for detailed error messages
+- **Solution**: The improved CSV parser now handles complex formats better.
+- **Check**: Ensure your CSV file has proper headers and data.
+- **Debug**: Check browser console for detailed error messages.
 
 **2. "Charts are not coming correctly"**
-- **Solution**: Use the "Refresh Options" button in the dashboard
-- **Check**: Ensure you've selected both X and Y axes
-- **Debug**: Check browser console for chart generation errors
+- **Solution**: Use the "Refresh Options" button in the dashboard.
+- **Check**: Ensure you've selected both X and Y axes.
+- **Debug**: Check browser console for chart generation errors.
 
-**3. "Column names are not loading"**
-- **Solution**: Use the "Debug Dashboard" button
-- **Check**: Ensure your CSV has proper headers
-- **Debug**: Check browser console for DOM element errors
+**3. "AI features not working"**
+- **Solution**: Ensure you have entered a valid Google Gemini API key.
+- **Check**: Verify your API key has the necessary permissions and is not expired.
 
-**4. "AI features not working"**
-- **Solution**: Ensure Ollama is running and a model is installed
-- **Check**: Run `ollama list` to see available models
-- **Install**: Run `ollama pull llama2` to install a model
-
-**5. "Server connection failed"**
-- **Solution**: Ensure the Flask server is running
-- **Check**: Run `python app.py` and check for errors
-- **Port**: Ensure port 5000 is not in use
+**4. "Server connection failed"**
+- **Solution**: Ensure the Flask server is running.
+- **Check**: Run `python app.py` and check for errors in your terminal.
+- **Port**: Ensure port 5000 is not in use by another application.
 
 ### Debug Tools
 
 The application includes several debug features:
 
-1. **Browser Console**: Press F12 to open developer tools and check for errors
-2. **Debug Buttons**: Use "Refresh Options" and "Debug Dashboard" buttons
-3. **Test Script**: Run `python test_setup.py` to verify your setup
-4. **Health Check**: The application automatically tests backend connectivity
+1. **Browser Console**: Press F12 to open developer tools and check for errors.
+2. **Test Script**: Run `python test_setup.py` to verify your setup.
+3. **Health Check**: The application automatically tests backend connectivity.
 
 ### Performance Tips
 
-1. **Large Files**: For files > 10MB, consider splitting into smaller chunks
-2. **Memory Usage**: Close other applications if experiencing slowdowns
-3. **Browser**: Use Chrome or Firefox for best performance
-4. **Network**: Ensure stable internet connection for AI features
+1. **Large Files**: For files > 50MB, consider splitting into smaller chunks.
+2. **Memory Usage**: Close other applications if experiencing slowdowns.
+3. **Browser**: Use Chrome or Firefox for best performance.
+4. **Network**: A stable internet connection is required for AI features.
 
 ## File Structure
 
@@ -137,17 +129,17 @@ csv_ai_viewer/
 ├── styles.css          # CSS styling
 ├── script.js           # JavaScript functionality
 ├── requirements.txt    # Python dependencies
-├── test_setup.py      # Setup verification script
-└── README.md          # This file
+├── test_setup.py       # Setup verification script
+└── README.md           # This file
 ```
 
 ## Technical Details
 
 ### Backend (Flask)
 - **Framework**: Flask with CORS support
-- **AI Integration**: Ollama client for natural language processing
-- **Data Processing**: Pandas for data manipulation and analysis
-- **Export**: Excel and CSV export with statistics
+- **AI Integration**: Google Gemini for natural language processing.
+- **Data Processing**: Pandas for data manipulation and analysis.
+- **Export**: Excel and CSV export with statistics.
 
 ### Frontend (HTML/CSS/JavaScript)
 - **Framework**: Vanilla JavaScript for maximum compatibility
@@ -156,20 +148,20 @@ csv_ai_viewer/
 - **Interactivity**: Real-time data updates and user interactions
 
 ### Data Processing
-- **CSV Parsing**: Robust parser handling complex CSV formats
-- **Data Types**: Automatic detection of numeric, categorical, and date columns
-- **Validation**: Comprehensive data validation and error handling
-- **Performance**: Optimized for large datasets
+- **CSV Parsing**: Robust parser handling complex CSV formats.
+- **Data Types**: Automatic detection of numeric, categorical, and date columns.
+- **Validation**: Comprehensive data validation and error handling.
+- **Performance**: Optimized for large datasets.
 
 ## Contributing
 
 To contribute to this project:
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+1. Fork the repository.
+2. Create a feature branch.
+3. Make your changes.
+4. Test thoroughly.
+5. Submit a pull request.
 
 ## License
 
@@ -179,14 +171,12 @@ This project is open source and available under the MIT License.
 
 If you encounter issues:
 
-1. Check the troubleshooting section above
-2. Run the test script: `python test_setup.py`
-3. Check browser console for error messages
-4. Ensure all dependencies are installed correctly
+1. Check the troubleshooting section above.
+2. Run the test script: `python test_setup.py`.
+3. Check the browser console for error messages.
+4. Ensure all dependencies are installed correctly.
 
 For additional support, please provide:
-- Error messages from browser console
-- Steps to reproduce the issue
-- Your system configuration (OS, browser, etc.) 
-
-pip install -r csv_ai_viewer/requirements.txt
+- Error messages from the browser console.
+- Steps to reproduce the issue.
+- Your system configuration (OS, browser, etc.).
