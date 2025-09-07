@@ -76,7 +76,7 @@ Now, output the code:
         try:
             genai.configure(api_key=api_key)
             
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-2.5-flash')
             response = model.generate_content(prompt)
             code = response.text.strip().split('\n')[0]
         except Exception as e:
