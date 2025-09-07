@@ -5513,6 +5513,13 @@ function switchAIMode(mode) {
 // Enhanced AI processing for filter mode
 async function processAIQueryWithCode(query) {
     try {
+        const apiKey = document.getElementById('geminiApiKey').value.trim();
+        if (!apiKey) {
+            hideTypingIndicator();
+            addMessageToChat('ai', 'Please enter your Gemini API key to use the AI features.');
+            return;
+        }
+
         if (!currentData || currentData.length === 0) {
             hideTypingIndicator();
             addMessageToChat('ai', 'Please upload a CSV file first so I can help you analyze the data.');
@@ -5560,7 +5567,7 @@ Now, output the code:`;
         const response = await fetch('/api/ai-analysis', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ csvData, question: query, mode: currentAIMode })
+            body: JSON.stringify({ csvData, question: query, mode: currentAIMode, apiKey: apiKey })
         });
         
         console.log('Response status:', response.status);
